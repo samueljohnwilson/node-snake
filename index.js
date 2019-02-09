@@ -39,7 +39,7 @@ app.post('/move', (request, response) => {
 
   // Response data
 
-  const data = {
+  let data = {
     move: 'right', // one of: ['up','down','left','right']
   }
 
