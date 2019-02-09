@@ -25,8 +25,6 @@ app.use(poweredByHandler)
 app.post('/start', (request, response) => {
   // NOTE: Do something here to start the game
 
-  console.log('/start resp: ' + response);
-
   // Response data
   const data = {
     color: '#DFFF00',
@@ -39,11 +37,26 @@ app.post('/start', (request, response) => {
 app.post('/move', (request, response) => {
   // NOTE: Do something here to generate your move
 
-  console.log('/move resp: ' + response);
-
   // Response data
+
   const data = {
     move: 'up', // one of: ['up','down','left','right']
+  }
+
+  if (req.board.snakes.body.x === 1) {
+    data.move = 'down';
+  }
+
+  if (req.board.snakes.body.x === req.board.width) {
+    data.move = 'up';
+  }
+
+  if (req.board.snakes.body.y === 1) {
+    data.move = 'left';
+  }
+
+  if (req.board.snakes.body.y === req.board.height) {
+    data.move = 'right';
   }
 
   return response.json(data)
