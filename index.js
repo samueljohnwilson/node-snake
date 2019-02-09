@@ -40,7 +40,7 @@ app.post('/move', (request, response) => {
   // Response data
 
   const data = {
-    move: 'up', // one of: ['up','down','left','right']
+    move: 'right', // one of: ['up','down','left','right']
   }
 
   if (req.board.you.body[0].x === 1) {
