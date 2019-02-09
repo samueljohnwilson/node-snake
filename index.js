@@ -25,6 +25,8 @@ app.use(poweredByHandler)
 app.post('/start', (request, response) => {
   // NOTE: Do something here to start the game
 
+  console.log('/start resp: ' + response);
+
   // Response data
   const data = {
     color: '#DFFF00',
@@ -37,6 +39,8 @@ app.post('/start', (request, response) => {
 app.post('/move', (request, response) => {
   // NOTE: Do something here to generate your move
 
+  console.log('/move resp: ' + response);
+
   // Response data
   const data = {
     move: 'up', // one of: ['up','down','left','right']
@@ -47,6 +51,7 @@ app.post('/move', (request, response) => {
 
 app.post('/end', (request, response) => {
   // NOTE: Any cleanup when a game is complete.
+  console.log('/end resp: ' + response);
   return response.json({})
 })
 
