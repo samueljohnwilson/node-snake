@@ -25,6 +25,7 @@ app.use(poweredByHandler)
 app.post('/start', (request, response) => {
   // NOTE: Do something here to start the game
 
+  console.log(request.game);
   // Response data
   const data = {
     color: '#DFFF00',
