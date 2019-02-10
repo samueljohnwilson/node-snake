@@ -43,23 +43,23 @@ app.post('/move', (req, response) => {
     move: 'right' // one of: ['up','down','left','right']
   }
 
-  if (req.you.body[0].x === 1) {
-    data.move = 'down';
-  }
+  // if (req.you.body[0].x === 1) {
+  //   data.move = 'down';
+  // }
 
-  if (req.you.body[0].x === req.board.width) {
-    data.move = 'up';
-  }
+  // if (req.you.body[0].x === req.board.width) {
+  //   data.move = 'up';
+  // }
 
-  if (req.you.body[0].y === 1) {
-    data.move = 'left';
-  }
+  // if (req.you.body[0].y === 1) {
+  //   data.move = 'left';
+  // }
 
-  if (req.you.body[0].y === req.board.height) {
-    data.move = 'right';
-  }
+  // if (req.you.body[0].y === req.board.height) {
+  //   data.move = 'right';
+  // }
 
-  return response.json(data.move)
+  return response.json(data)
 })
 
 app.post('/end', (request, response) => {
