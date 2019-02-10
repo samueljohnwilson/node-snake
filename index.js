@@ -25,47 +25,46 @@ app.use(poweredByHandler)
 app.post('/start', (request, response) => {
   // NOTE: Do something here to start the game
 
-  console.log(request.game);
   // Response data
   const data = {
-    color: '#DFFF00',
+    color: '#d3d3d3',
   }
 
   return response.json(data)
 })
 
 // Handle POST request to '/move'
-app.post('/move', (request, response) => {
+app.post('/move', (req, response) => {
   // NOTE: Do something here to generate your move
 
   // Response data
 
-  let data = {
-    move: 'right', // one of: ['up','down','left','right']
+  const data = {
+    move: 'right' // one of: ['up','down','left','right']
   }
 
-  if (req.board.you.body[0].x === 1) {
-    data.move = 'down';
-  }
+  // if (req.you.body[0].x === 1) {
+  //   data.move = 'down';
+  // }
 
-  if (req.board.you.body[0].x === req.board.width) {
-    data.move = 'up';
-  }
+  // if (req.you.body[0].x === req.board.width) {
+  //   data.move = 'up';
+  // }
 
-  if (req.board.you.body[0].y === 1) {
-    data.move = 'left';
-  }
+  // if (req.you.body[0].y === 1) {
+  //   data.move = 'left';
+  // }
 
-  if (req.board.you.body[0].y === req.board.height) {
-    data.move = 'right';
-  }
+  // if (req.you.body[0].y === req.board.height) {
+  //   data.move = 'right';
+  // }
 
-  return response.json(data)
+  return response.json(data.move)
 })
 
 app.post('/end', (request, response) => {
   // NOTE: Any cleanup when a game is complete.
-  console.log('/end resp: ' + response);
+
   return response.json({})
 })
 
