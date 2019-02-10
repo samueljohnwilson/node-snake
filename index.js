@@ -43,19 +43,19 @@ app.post('/move', (req, response) => {
     move: 'right' // one of: ['up','down','left','right']
   }
 
-  if (req.you.body[0].x === 2) {
+  if (req.you.body[0].x <= 2) {
     data.move = 'down';
   }
 
-  if (req.you.body[0].x === req.board.width - 1) {
+  if (req.you.body[0].x >= req.board.width - 1) {
     data.move = 'up';
   }
 
-  if (req.you.body[0].y === 2) {
+  if (req.you.body[0].y <= 2) {
     data.move = 'left';
   }
 
-  if (req.you.body[0].y === req.board.height - 1) {
+  if (req.you.body[0].y >= req.board.height - 1) {
     data.move = 'right';
   }
 
