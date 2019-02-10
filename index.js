@@ -59,7 +59,7 @@ app.post('/move', (req, response) => {
   //   data.move = 'right';
   // }
 
-  return response.json(data)
+  return response.json(data);
 })
 
 app.post('/end', (request, response) => {
