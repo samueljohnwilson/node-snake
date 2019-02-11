@@ -7,7 +7,7 @@ const {
   notFoundHandler,
   genericErrorHandler,
   poweredByHandler
-} = require('./handlers.js')
+} = require('./handlers.js');
 
 const easystarjs = require('easystarjs');
 
@@ -76,22 +76,17 @@ app.post('/start', (req, res) => {
 
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
-
   const { board, you: ourSnake } = req.body
   const { height, width, food: allFood, snakes: enemySnakes } = board;
   const ourHead = ourSnake.body[0];
+  const ourTail = ourSnake.body[ourSnake.body.length - 1];
+  const ourLength = ourSnake.body.length;
 
   const left = { x: ourHead.x - 1, y: ourHead.y, move: 'left' };
   const right = { x: ourHead.x + 1, y: ourHead.y, move: 'right' };
   const up = { x: ourHead.x, y: ourHead.y - 1, move: 'up' };
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   const possibleDirections = [left, right, up, down];
-
-  const atLeftBorder = ourHead.x === 0 ? 'left' : false;
-  const atRightBorder = ourHead.x === width ? 'right' : false;
-  const atTopBorder = ourHead.y === 0 ? 'up' : false;
-  const atBottomBorder = ourHead.y === height ? 'down' : false;
-  const borders = [atLeftBorder, atRightBorder, atTopBorder, atBottomBorder];
 
   const grid = [];
   let nextMove;
@@ -139,6 +134,15 @@ app.post('/move', (req, res) => {
     });
   }
 
+  function seekTail(path) {
+    possibleDirections.forEach((direction) => {
+      if (path[1].x === direction.x && path[1].y === direction.y) {
+        nextMove = direction.move;
+        console.log('Following tail.');
+      } 
+    });
+  }
+
   function eat() {
     if (allFood.length) {
       let nearestFood = allFood[0];
@@ -158,16 +162,21 @@ app.post('/move', (req, res) => {
       });
       easystar.calculate();
     } else {
-      console.log('No food.')
+      console.log('No food to follow.')
     }
+  }
+
+  function removeDirection(direction) {
+    const index = possibleDirections.indexOf(direction);
+    possibleDirections.splice(index, 1);
   }
 
   function avoidBody() {
     possibleDirections.forEach((direction) => {
       ourSnake.body.forEach((segment) => {
         if (direction.x === segment.x && direction.y === segment.y) {
-          const index = possibleDirections.indexOf(direction);
-          possibleDirections.splice(index, 1);
+          removeDirection(direction);
+          avoidBody();
         }
       });
     });
@@ -175,56 +184,65 @@ app.post('/move', (req, res) => {
 
   function avoidWalls() {
     possibleDirections.forEach((direction) => {
-      // borders.forEach((border) => {
-      //   if (direction.move === border) {
-      //     const index = possibleDirections.indexOf(direction);
-      //     console.log('Removing: ' + JSON.stringify(possibleDirections.splice(index, 1)));
-      //   }
-        if (direction.x < 0) {
-          // remove left
-          const index = possibleDirections.indexOf(left);
-          possibleDirections.splice(index, 1);
-        }
+      if (direction.x < 0) {
+        removeDirection(left);
+        avoidWalls();
+      }
 
-        if (direction.x > width) {
-          // remove right
-          const index = possibleDirections.indexOf(right);
-          possibleDirections.splice(index, 1);
-        }
+      if (direction.x === width) {
+        removeDirection(right);
+        avoidWalls();
+      }
 
-        if (direction.y < 0) {
-          // remove up
-          const index = possibleDirections.indexOf(up);
-          possibleDirections.splice(index, 1);
-        }
+      if (direction.y < 0) {
+        removeDirection(up);
+        avoidWalls();
+      }
 
-        if (direction.y > height) {
-          // remove down
-          const index = possibleDirections.indexOf(down);
-          possibleDirections.splice(index, 1);
-        }
-      // });
+      if (direction.y === height) {
+        removeDirection(down);
+        avoidWalls();
+      }
     });
   }
 
-  avoidBody();
-  avoidWalls();
-  eat();
+  function followTail() {
+    easystar.findPath(ourHead.x, ourHead.y, ourTail.x, ourTail.y, function(path) {
+      console.log(path);
+    });
+    easystar.calculate();
+  }
 
-  console.log(grid)
-  console.log(possibleDirections)
-
-  if (!nextMove) {
+  function randomMove() {
     const random = Math.round(Math.random() * (possibleDirections.length - 1));
     console.log('Moving randomly.')
     nextMove = possibleDirections[random].move
   }
+ 
+  avoidBody();
+  avoidWalls();
 
+  if (ourSnake.health < 85 || ourLength < 7) {
+    eat();
+  } else {
+    followTail();
+  }
+
+  if (!nextMove) {
+    randomMove();
+  }
+
+  console.log(grid)
+  console.log('Possible moves:')
+  console.log(possibleDirections)
+  console.log('Move chosen:')
   console.log(nextMove)
 
   const data = {
     move: nextMove
   }
+
+  console.log(data);
 
   return res.json(data);
 });
