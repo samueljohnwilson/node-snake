@@ -77,7 +77,7 @@ app.post('/start', (req, res) => {
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
   const { board, you: ourSnake } = req.body
-  const { height, width, food: allFood, snakes: enemySnakes } = board;
+  const { height, width, food, snakes: enemySnakes } = board;
   const ourHead = ourSnake.body[0];
   const ourTail = ourSnake.body[ourSnake.body.length - 1];
   const ourLength = ourSnake.body.length;
@@ -89,7 +89,7 @@ app.post('/move', (req, res) => {
   const possibleDirections = [left, right, up, down];
 
   const grid = [];
-  let nextMove;
+  let nextMove = false;
 
   const easystar = new easystarjs.js();
   updateGrid();
@@ -125,28 +125,19 @@ app.post('/move', (req, res) => {
     }
   }
 
-  function seekFood(foodPath) {
+  function seekFood(path) {
     possibleDirections.forEach((direction) => {
-      if (foodPath[1].x === direction.x && foodPath[1].y === direction.y) {
+      if (path[1].x === direction.x && path[1].y === direction.y) {
         nextMove = direction.move;
         console.log('Following food.');
       } 
     });
   }
 
-  function seekTail(path) {
-    possibleDirections.forEach((direction) => {
-      if (path[1].x === direction.x && path[1].y === direction.y) {
-        nextMove = direction.move;
-        console.log('Following tail.');
-      } 
-    });
-  }
-
-  function eat() {
-    if (allFood.length) {
-      let nearestFood = allFood[0];
-      allFood.forEach((portion) => {
+  function eat(easystar, ourHead, food) {
+    if (food.length) {
+      let nearestFood = food[0];
+      food.forEach((portion) => {
         const xDistance = Math.abs(portion.x - ourHead.x);
         const yDistance = Math.abs(portion.y - ourHead.y);
         const totalDistance = xDistance + yDistance;
@@ -163,6 +154,7 @@ app.post('/move', (req, res) => {
       easystar.calculate();
     } else {
       console.log('No food to follow.')
+      return false;
     }
   }
 
@@ -189,7 +181,7 @@ app.post('/move', (req, res) => {
         avoidWalls();
       }
 
-      if (direction.x === width) {
+      if (direction.x >= width) {
         removeDirection(right);
         avoidWalls();
       }
@@ -199,44 +191,166 @@ app.post('/move', (req, res) => {
         avoidWalls();
       }
 
-      if (direction.y === height) {
+      if (direction.y >= height) {
         removeDirection(down);
         avoidWalls();
       }
     });
   }
 
-  function followTail() {
-    easystar.findPath(ourHead.x, ourHead.y, ourTail.x, ourTail.y, function(path) {
-      console.log(path);
+  function followTail(possibleDirections, ourHead, ourTail) {
+    const xMove = ourHead.x - ourTail.x > 0 ? 'left' : 'right';
+    const yMove = ourHead.y - ourTail.y > 0 ? 'up' : 'down';
+    const moves = [];
+    
+    possibleDirections.forEach((direction) => {
+      if (direction.move === xMove) {
+        moves.push(xMove);
+      }
+
+      if (direction.move === yMove) {
+        moves.push(yMove);
+      }
     });
-    easystar.calculate();
+
+    if (moves.length === 1) {
+      return moves[0];
+    }
+
+    if (moves.length > 1){
+      const random = Math.round(Math.random() * (moves.length - 1));
+      return moves[random];
+    }
+
+    if (!moves) {
+      return false;
+    }
   }
+
+  function mode(array) {
+    const modeMap = {};
+    let maxEl = array[0];
+    let maxCount = 0;
+
+    array.forEach((el) => {
+      if (!modeMap[el]) {
+        modeMap[el] = 1;
+      } else {
+        modeMap[el]++;  
+      }
+          
+      if (modeMap[el] > maxCount) {
+        maxEl = el;
+        maxCount = modeMap[el];
+      }
+      
+    });
+
+    return maxEl;
+  }
+
+// function avoidTurnTowardMass(snake) {
+//   const xArr = [];
+//   const yArr = [];
+//   let coords = {};
+
+//   snake.body.forEach((segment) => {
+//     xArr.push(segment.x);
+//     yArr.push(segment.y);
+//   });
+
+//   let x = 0;
+//   let y = 0;
+//   for (let i = 0; i < xArr.length; i++ ) {
+//     x += xArr[i];
+//     y += yArr[i];
+//   }
+
+//   coords.x = x / xArr.length;
+//   coords.y = y / yArr.length;
+
+//   possibleDirections.forEach((direction) => {
+//     if (coords.x > direction.x && possibleDirections.length > 1) {
+//       removeDirection(right);
+//       avoidTurnTowardMass(snake);
+//       console.log('Do not move right');
+//     }
+
+//     if (coords.x < direction.x && possibleDirections.length > 1) {
+//       removeDirection(left);
+//       avoidTurnTowardMass(snake);
+//       console.log('Do not move left');
+//     }
+
+//     if (coords.y > direction.y && possibleDirections.length > 1) {
+//       removeDirection(down);
+//       avoidTurnTowardMass(snake);
+//       console.log('Do not move down');
+//     }
+
+//     if (coords.y < direction.y && possibleDirections.length > 1) {
+//       removeDirection(up);
+//       avoidTurnTowardMass(snake);
+//       console.log('Do not move up');
+//     }
+//   });
+// }
 
   function randomMove() {
     const random = Math.round(Math.random() * (possibleDirections.length - 1));
     console.log('Moving randomly.')
     nextMove = possibleDirections[random].move
   }
+
+  function kill(ourLength, ourHead, enemySnakes) {
+    const shortSnakes = [];
+
+    enemySnakes.forEach((snake) => {
+      if (ourLength > snake.body.length) {
+        shortSnakes.push(snake.id);
+      }
+    });
+
+    if (shortSnakes) {
+      let closestKillableDistance = 0;
+      let closestKillableSnake;
+
+      shortSnakes.forEach((shorty) => {
+        const xDistance = ourHead.x - shortSnakes.x;
+        const yDistance = ourHead.y - shortSnakes.y;
+
+
+        if (xDistance + yDistance > closestKillableDistance) {
+          closestKillableSnake = shorty.id;
+        }
+      });
+
+      const aggression = ourLength - closestKillableSnake.body.length;
+
+      if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
+        // Move toward killable snake
+      }
+    }
+  }
  
   avoidBody();
   avoidWalls();
 
-  if (ourSnake.health < 85 || ourLength < 7) {
-    eat();
+  if (ourSnake.health < 30 || ourLength < 7) {
+    eat(easystar, ourHead, food);
   } else {
-    followTail();
+    nextMove = followTail(possibleDirections, ourHead, ourTail);
   }
 
   if (!nextMove) {
     randomMove();
   }
 
-  console.log(grid)
-  console.log('Possible moves:')
-  console.log(possibleDirections)
-  console.log('Move chosen:')
-  console.log(nextMove)
+  console.log(grid);
+  // console.log('Possible moves:')
+  // console.log(possibleDirections)
+  // console.log('Move chosen:')
+  // console.log(nextMove)
 
   const data = {
     move: nextMove
