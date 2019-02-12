@@ -307,7 +307,7 @@ app.post('/move', (req, res) => {
 
     enemySnakes.forEach((snake) => {
       if (ourLength > snake.body.length) {
-        shortSnakes.push(snake.id);
+        shortSnakes.push(snake);
       }
     });
 
@@ -316,8 +316,8 @@ app.post('/move', (req, res) => {
       let closestKillableSnake;
 
       shortSnakes.forEach((shorty) => {
-        const xDistance = ourHead.x - shortSnakes.x;
-        const yDistance = ourHead.y - shortSnakes.y;
+        const xDistance = ourHead.x - shorty.x;
+        const yDistance = ourHead.y - shorty.y;
 
 
         if (xDistance + yDistance > closestKillableDistance) {
