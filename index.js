@@ -258,7 +258,7 @@ app.post('/move', (req, res) => {
 
       if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
         let finder = new Pathfinder.AStarFinder();
-        pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
+        pathfinderGrid.setWalkableAt(closestKillableSnake.body.x, closestKillableSnake.body.y, true);
         const path = finder.findPath(ourHead.x, ourHead.y, closestKillableSnake.body.x, closestKillableSnake.body.y, pathfinderGrid);
         const backupGrid = pathfinderGrid.clone();
     
