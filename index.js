@@ -9,7 +9,7 @@ const {
   poweredByHandler
 } = require('./handlers.js');
 
-const easystarjs = require('easystarjs');
+const Pathfinder = require('pathfinding');
 
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env
@@ -25,47 +25,7 @@ const gridRows = {};
 // Handle POST request to '/start'
 app.post('/start', (req, res) => {
 
-  const { height, width, snakes: enemySnakes } = req.body.board;
-  const ourSnake = req.body.you;
-  const ourHead = ourSnake.body[0];
-  const grid = [];
-
-// Builds grid based on board size of format:
-//  [
-//    [0,0,0]
-//    [0,0,0]
-//    [0,0,0]
-//  ]
-
-  for (let i = 0; i < height; i++){
-    const arr = [];
-
-    for (let j = 0; j < width; j++) {
-      arr.push(0);
-    }
-  
-    gridRows[i] = arr;
-  }
-
-// Adds 1 to any point on the grid with a snake head:
-//  [
-//    [0,0,0]
-//    [0,1,0]
-//    [0,0,0]
-//  ]
-
-  gridRows[ourHead.y][ourHead.x] = 1
-
-  if (enemySnakes) {
-    enemySnakes.forEach((enemy) => {
-      const enemyHead = enemy.body[0];
-      gridRows[enemyHead.y][enemyHead.x];
-    });
-  };
-
-  for (row in gridRows) {
-    grid.push(gridRows[row]);
-  }
+  console.log('Yaaaasssssssss');
 
   const data = {
     color: '#d3d3d3',
@@ -91,14 +51,11 @@ app.post('/move', (req, res) => {
   const grid = [];
   let nextMove = false;
 
-  const easystar = new easystarjs.js();
   updateGrid();
-  easystar.setGrid(grid);
-  easystar.setAcceptableTiles([0]);
-  easystar.enableSync();
+  let pathfinderGrid = new Pathfinder.Grid(grid);
 
   function updateGrid() {
-    for (let i = 0; i < height; i++){
+    for (let i = 0; i < height; i++) {
       const arr = [];
   
       for (let j = 0; j < width; j++) {
@@ -108,9 +65,11 @@ app.post('/move', (req, res) => {
       gridRows[i] = arr;
     }
 
-    ourSnake.body.forEach((segment) => {
-      gridRows[segment.y][segment.x] = 1
-    });
+    gridRows[ourHead.y][ourHead.x] = 2;
+
+    for (let i = 1; i < ourLength; i++) {
+      gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1
+    }
 
     if (enemySnakes) {
       enemySnakes.forEach((enemy) => {
@@ -125,20 +84,33 @@ app.post('/move', (req, res) => {
     }
   }
 
-  function seekFood(path) {
-    console.log('seekFood()');
+  function seek(path, backupGrid) {
+    console.log('seek()');
+    let match = false;
+
     possibleDirections.forEach((direction) => {
-      if (path[1].x === direction.x && path[1].y === direction.y) {
+      if (path[1][0] === direction.x && path[1][1] === direction.y) {
         nextMove = direction.move;
-        console.log('Following food.');
-      } 
+        match = true;
+      }
     });
+
+    if (!match) {
+      const anotherGrid = backupGrid.clone();
+      backupGrid.setWalkableAt((width - ourHead.x), (height - nearestFood.y), true);
+      const finder = new Pathfinder.AStarFinder();
+      const backupPath = finder.findPath(ourHead.x, ourHead.y, (width - ourHead.x), (height - nearestFood.y), backupGrid);
+    
+      seek(backupPath, anotherGrid);
+    }
   }
 
-  function eat(easystar, ourHead, food) {
+  function eat(pathfinderGrid, ourHead, food) {
     console.log('eat()');
+
     if (food.length) {
       let nearestFood = food[0];
+
       food.forEach((portion) => {
         const xDistance = Math.abs(portion.x - ourHead.x);
         const yDistance = Math.abs(portion.y - ourHead.y);
@@ -150,13 +122,13 @@ app.post('/move', (req, res) => {
         }
       });
       
-      easystar.findPath(ourHead.x, ourHead.y, nearestFood.x, nearestFood.y, function(path) {
-        seekFood(path);
-      });
-      easystar.calculate();
+      let finder = new Pathfinder.AStarFinder();
+      const path = finder.findPath(ourHead.x, ourHead.y, nearestFood.x, nearestFood.y, pathfinderGrid);
+      const backupGrid = pathfinderGrid.clone();
+
+      seek(path, backupGrid);
     } else {
       console.log('No food to follow.')
-      return false;
     }
   }
 
@@ -210,35 +182,14 @@ app.post('/move', (req, res) => {
     });
   }
 
-  function followTail(possibleDirections, ourSnake, ourHead) {
+  function followTail(pathfinderGrid, ourHead, ourTail) {
     console.log('followTail()');
-    const ourButt = ourSnake.body[ourSnake.body.length - 2];
-    const xMove = ourHead.x - ourButt.x > 0 ? 'left' : 'right';
-    const yMove = ourHead.y - ourButt.y > 0 ? 'up' : 'down';
-    const moves = [];
-    
-    possibleDirections.forEach((direction) => {
-      if (direction.move === xMove) {
-        moves.push(xMove);
-      }
+    pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
+    let finder = new Pathfinder.AStarFinder();
+    const path = finder.findPath(ourHead.x, ourHead.y, ourTail.x, ourTail.y, pathfinderGrid);
+    const backupGrid = pathfinderGrid.clone();
 
-      if (direction.move === yMove) {
-        moves.push(yMove);
-      }
-    });
-
-    if (moves.length === 1) {
-      return moves[0];
-    }
-
-    if (moves.length > 1){
-      const random = Math.round(Math.random() * (moves.length - 1));
-      return moves[random];
-    }
-
-    if (!moves) {
-      return false;
-    }
+    seek(path, backupGrid);
   }
 
   function mode(array) {
@@ -292,75 +243,23 @@ app.post('/move', (req, res) => {
 
 
         if (xDistance + yDistance > closestKillableDistance) {
-          closestKillableSnake = shorty.id;
+          closestKillableSnake = shorty;
         }
       });
 
       const aggression = ourLength - closestKillableSnake.body.length;
 
       if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
-        // Move toward killable snake
+        let finder = new Pathfinder.AStarFinder();
+        pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
+        const path = finder.findPath(ourHead.x, ourHead.y, closestKillableSnake.body.x, closestKillableSnake.body.y, pathfinderGrid);
+        const backupGrid = pathfinderGrid.clone();
+    
+        seek(path, backupGrid);
       }
     }
   }
 
-  function checkSurroundingTiles(possibleDirections, gridRows) {
-    console.log('checkSurroundingTiles()')
-    possibleDirections.forEach((direction) => {
-      console.log(direction);
-      if (direction === left) {
-        if (
-          gridRows[ourHead.y][ourHead.x - 2] !== 0 && 
-          gridRows[ourHead.y - 1][ourHead.x - 2] !== 0 &&
-          gridRows[ourHead.y + 1][ourHead.x - 2] !== 0 &&
-          gridRows[ourHead.y - 1][ourHead.x - 1] !== 0 &&
-          gridRows[ourHead.y + 1][ourHead.x - 1] !== 0
-        ) {
-          removeDirection(left);
-          console.log('...remove left');
-        }
-      }
-
-      if (direction === right) {
-        if (
-          gridRows[ourHead.y][ourHead.x + 2] !== 0 && 
-          gridRows[ourHead.y + 1][ourHead.x + 2] !== 0 &&
-          gridRows[ourHead.y - 1][ourHead.x + 2] !== 0 &&
-          gridRows[ourHead.y + 1][ourHead.x + 1] !== 0 &&
-          gridRows[ourHead.y - 1][ourHead.x + 1] !== 0
-        ) {
-          removeDirection(right);
-          console.log('...remove right');
-        }
-      }
-
-      if (direction === up) {
-        if (
-          gridRows[ourHead.y - 1][ourHead.x - 1] !== 0 && 
-          gridRows[ourHead.y - 2][ourHead.x - 1] !== 0 &&
-          gridRows[ourHead.y - 2][ourHead.x] !== 0 &&
-          gridRows[ourHead.y - 2][ourHead.x + 1] !== 0 &&
-          gridRows[ourHead.y - 1][ourHead.x + 1] !== 0
-        ) {
-          removeDirection(up);
-          console.log('...remove up');
-        }
-      }
-
-      if (direction === down) {
-        if (
-          gridRows[ourHead.y + 1][ourHead.x + 1] !== 0 && 
-          gridRows[ourHead.y + 2][ourHead.x + 1] !== 0 &&
-          gridRows[ourHead.y + 2][ourHead.x] !== 0 &&
-          gridRows[ourHead.y + 2][ourHead.x - 1] !== 0 &&
-          gridRows[ourHead.y + 1][ourHead.x - 1] !== 0
-        ) {
-          removeDirection(down);
-          console.log('...remove down');
-        }
-      }
-    })
-  }
   
   function snakeArray(ourSnake, enemySnakes) {
     const allSnakes = [];
@@ -374,25 +273,23 @@ app.post('/move', (req, res) => {
   }
 
   const allSnakes = snakeArray(ourSnake, enemySnakes)
-  avoidSnakeBody(allSnakes);
-  avoidWalls();
-  checkSurroundingTiles(possibleDirections, gridRows);
+  // avoidSnakeBody(allSnakes);
+  // avoidWalls();
 
-  if (ourSnake.health < 30 || ourLength < 8) {
-    eat(easystar, ourHead, food);
+  
+  if (ourSnake.health < 50 || ourLength < 10 || food.length === 0) {
+    eat(pathfinderGrid, ourHead, food);
   } else {
-    nextMove = followTail(possibleDirections, ourSnake, ourTail);
+    followTail(pathfinderGrid, ourHead, ourTail);
   }
-
+  
   if (!nextMove) {
-    randomMove();
+    followTail(pathfinderGrid, ourHead, ourTail);
   }
-
-  // console.log(grid);
-  // console.log('Possible moves:')
-  // console.log(possibleDirections)
-  // console.log('Move chosen:')
-  // console.log(nextMove)
+  
+  // if (!nextMove) {
+  //   randomMove();
+  // }
 
   const data = {
     move: nextMove
@@ -423,50 +320,3 @@ app.use(genericErrorHandler)
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'))
 })
-
-// function avoidTurnTowardMass(snake) {
-//   const xArr = [];
-//   const yArr = [];
-//   let coords = {};
-
-//   snake.body.forEach((segment) => {
-//     xArr.push(segment.x);
-//     yArr.push(segment.y);
-//   });
-
-//   let x = 0;
-//   let y = 0;
-//   for (let i = 0; i < xArr.length; i++ ) {
-//     x += xArr[i];
-//     y += yArr[i];
-//   }
-
-//   coords.x = x / xArr.length;
-//   coords.y = y / yArr.length;
-
-//   possibleDirections.forEach((direction) => {
-//     if (coords.x > direction.x && possibleDirections.length > 1) {
-//       removeDirection(right);
-//       avoidTurnTowardMass(snake);
-//       console.log('Do not move right');
-//     }
-
-//     if (coords.x < direction.x && possibleDirections.length > 1) {
-//       removeDirection(left);
-//       avoidTurnTowardMass(snake);
-//       console.log('Do not move left');
-//     }
-
-//     if (coords.y > direction.y && possibleDirections.length > 1) {
-//       removeDirection(down);
-//       avoidTurnTowardMass(snake);
-//       console.log('Do not move down');
-//     }
-
-//     if (coords.y < direction.y && possibleDirections.length > 1) {
-//       removeDirection(up);
-//       avoidTurnTowardMass(snake);
-//       console.log('Do not move up');
-//     }
-//   });
-// }
