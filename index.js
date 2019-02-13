@@ -126,6 +126,7 @@ app.post('/move', (req, res) => {
   }
 
   function seekFood(path) {
+    console.log('seekFood()');
     possibleDirections.forEach((direction) => {
       if (path[1].x === direction.x && path[1].y === direction.y) {
         nextMove = direction.move;
@@ -135,6 +136,7 @@ app.post('/move', (req, res) => {
   }
 
   function eat(easystar, ourHead, food) {
+    console.log('eat()');
     if (food.length) {
       let nearestFood = food[0];
       food.forEach((portion) => {
@@ -161,20 +163,30 @@ app.post('/move', (req, res) => {
   function removeDirection(direction) {
     const index = possibleDirections.indexOf(direction);
     possibleDirections.splice(index, 1);
+    console.log(`...remove ${direction.move}`)
   }
 
-  function avoidBody() {
+  function avoidSnakeBody(allSnakes) {
+    console.log('avoidSnakeBody()');
+    allSnakes.forEach((snake) => {
+      avoid(snake);
+    });
+  }
+
+  function avoid(snake) {
+    console.log('avoid()');
     possibleDirections.forEach((direction) => {
-      ourSnake.body.forEach((segment) => {
+      snake.body.forEach((segment) => {
         if (direction.x === segment.x && direction.y === segment.y) {
           removeDirection(direction);
-          avoidBody();
+          avoid(snake);
         }
       });
     });
   }
 
   function avoidWalls() {
+    console.log('avoidWalls()');
     possibleDirections.forEach((direction) => {
       if (direction.x < 0) {
         removeDirection(left);
@@ -198,9 +210,11 @@ app.post('/move', (req, res) => {
     });
   }
 
-  function followTail(possibleDirections, ourHead, ourTail) {
-    const xMove = ourHead.x - ourTail.x > 0 ? 'left' : 'right';
-    const yMove = ourHead.y - ourTail.y > 0 ? 'up' : 'down';
+  function followTail(possibleDirections, ourSnake, ourHead) {
+    console.log('followTail()');
+    const ourButt = ourSnake.body[ourSnake.body.length - 2];
+    const xMove = ourHead.x - ourButt.x > 0 ? 'left' : 'right';
+    const yMove = ourHead.y - ourButt.y > 0 ? 'up' : 'down';
     const moves = [];
     
     possibleDirections.forEach((direction) => {
@@ -249,6 +263,167 @@ app.post('/move', (req, res) => {
     return maxEl;
   }
 
+  function randomMove() {
+    console.log('randomMove()');
+    const random = Math.round(Math.random() * (possibleDirections.length - 1));
+    if (possibleDirections[random]) {
+      nextMove = possibleDirections[random].move
+    } else {
+      console.log('Something broke.')
+    }
+  }
+
+  function kill(ourLength, ourHead, enemySnakes) {
+    const shortSnakes = [];
+
+    enemySnakes.forEach((snake) => {
+      if (ourLength > snake.body.length) {
+        shortSnakes.push(snake);
+      }
+    });
+
+    if (shortSnakes) {
+      let closestKillableDistance = 0;
+      let closestKillableSnake;
+
+      shortSnakes.forEach((shorty) => {
+        const xDistance = ourHead.x - shorty.x;
+        const yDistance = ourHead.y - shorty.y;
+
+
+        if (xDistance + yDistance > closestKillableDistance) {
+          closestKillableSnake = shorty.id;
+        }
+      });
+
+      const aggression = ourLength - closestKillableSnake.body.length;
+
+      if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
+        // Move toward killable snake
+      }
+    }
+  }
+
+  function checkSurroundingTiles(possibleDirections, gridRows) {
+    console.log('checkSurroundingTiles()')
+    possibleDirections.forEach((direction) => {
+      console.log(direction);
+      if (direction === left) {
+        if (
+          gridRows[ourHead.y][ourHead.x - 2] !== 0 && 
+          gridRows[ourHead.y - 1][ourHead.x - 2] !== 0 &&
+          gridRows[ourHead.y + 1][ourHead.x - 2] !== 0 &&
+          gridRows[ourHead.y - 1][ourHead.x - 1] !== 0 &&
+          gridRows[ourHead.y + 1][ourHead.x - 1] !== 0
+        ) {
+          removeDirection(left);
+          console.log('...remove left');
+        }
+      }
+
+      if (direction === right) {
+        if (
+          gridRows[ourHead.y][ourHead.x + 2] !== 0 && 
+          gridRows[ourHead.y + 1][ourHead.x + 2] !== 0 &&
+          gridRows[ourHead.y - 1][ourHead.x + 2] !== 0 &&
+          gridRows[ourHead.y + 1][ourHead.x + 1] !== 0 &&
+          gridRows[ourHead.y - 1][ourHead.x + 1] !== 0
+        ) {
+          removeDirection(right);
+          console.log('...remove right');
+        }
+      }
+
+      if (direction === up) {
+        if (
+          gridRows[ourHead.y - 1][ourHead.x - 1] !== 0 && 
+          gridRows[ourHead.y - 2][ourHead.x - 1] !== 0 &&
+          gridRows[ourHead.y - 2][ourHead.x] !== 0 &&
+          gridRows[ourHead.y - 2][ourHead.x + 1] !== 0 &&
+          gridRows[ourHead.y - 1][ourHead.x + 1] !== 0
+        ) {
+          removeDirection(up);
+          console.log('...remove up');
+        }
+      }
+
+      if (direction === down) {
+        if (
+          gridRows[ourHead.y + 1][ourHead.x + 1] !== 0 && 
+          gridRows[ourHead.y + 2][ourHead.x + 1] !== 0 &&
+          gridRows[ourHead.y + 2][ourHead.x] !== 0 &&
+          gridRows[ourHead.y + 2][ourHead.x - 1] !== 0 &&
+          gridRows[ourHead.y + 1][ourHead.x - 1] !== 0
+        ) {
+          removeDirection(down);
+          console.log('...remove down');
+        }
+      }
+    })
+  }
+  
+  function snakeArray(ourSnake, enemySnakes) {
+    const allSnakes = [];
+    
+    allSnakes.push(ourSnake);
+    enemySnakes.forEach((snake) => {
+      allSnakes.push(snake);
+    });
+
+    return allSnakes;
+  }
+
+  const allSnakes = snakeArray(ourSnake, enemySnakes)
+  avoidSnakeBody(allSnakes);
+  avoidWalls();
+  checkSurroundingTiles(possibleDirections, gridRows);
+
+  if (ourSnake.health < 30 || ourLength < 8) {
+    eat(easystar, ourHead, food);
+  } else {
+    nextMove = followTail(possibleDirections, ourSnake, ourTail);
+  }
+
+  if (!nextMove) {
+    randomMove();
+  }
+
+  // console.log(grid);
+  // console.log('Possible moves:')
+  // console.log(possibleDirections)
+  // console.log('Move chosen:')
+  // console.log(nextMove)
+
+  const data = {
+    move: nextMove
+  }
+
+  console.log(data);
+
+  return res.json(data);
+});
+
+app.post('/end', (req, res) => {
+  // NOTE: Any cleanup when a game is complete.
+
+  return res.json({})
+})
+
+app.post('/ping', (req, res) => {
+  // Used for checking if this snake is still alive.
+  return res.json({});
+})
+
+// --- SNAKE LOGIC GOES ABOVE THIS LINE ---
+
+app.use('*', fallbackHandler)
+app.use(notFoundHandler)
+app.use(genericErrorHandler)
+
+app.listen(app.get('port'), () => {
+  console.log('Server listening on port %s', app.get('port'))
+})
+
 // function avoidTurnTowardMass(snake) {
 //   const xArr = [];
 //   const yArr = [];
@@ -295,89 +470,3 @@ app.post('/move', (req, res) => {
 //     }
 //   });
 // }
-
-  function randomMove() {
-    const random = Math.round(Math.random() * (possibleDirections.length - 1));
-    console.log('Moving randomly.')
-    nextMove = possibleDirections[random].move
-  }
-
-  function kill(ourLength, ourHead, enemySnakes) {
-    const shortSnakes = [];
-
-    enemySnakes.forEach((snake) => {
-      if (ourLength > snake.body.length) {
-        shortSnakes.push(snake);
-      }
-    });
-
-    if (shortSnakes) {
-      let closestKillableDistance = 0;
-      let closestKillableSnake;
-
-      shortSnakes.forEach((shorty) => {
-        const xDistance = ourHead.x - shorty.x;
-        const yDistance = ourHead.y - shorty.y;
-
-
-        if (xDistance + yDistance > closestKillableDistance) {
-          closestKillableSnake = shorty.id;
-        }
-      });
-
-      const aggression = ourLength - closestKillableSnake.body.length;
-
-      if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
-        // Move toward killable snake
-      }
-    }
-  }
- 
-  avoidBody();
-  avoidWalls();
-
-  if (ourSnake.health < 30 || ourLength < 7) {
-    eat(easystar, ourHead, food);
-  } else {
-    nextMove = followTail(possibleDirections, ourHead, ourTail);
-  }
-
-  if (!nextMove) {
-    randomMove();
-  }
-
-  console.log(grid);
-  // console.log('Possible moves:')
-  // console.log(possibleDirections)
-  // console.log('Move chosen:')
-  // console.log(nextMove)
-
-  const data = {
-    move: nextMove
-  }
-
-  console.log(data);
-
-  return res.json(data);
-});
-
-app.post('/end', (req, res) => {
-  // NOTE: Any cleanup when a game is complete.
-
-  return res.json({})
-})
-
-app.post('/ping', (req, res) => {
-  // Used for checking if this snake is still alive.
-  return res.json({});
-})
-
-// --- SNAKE LOGIC GOES ABOVE THIS LINE ---
-
-app.use('*', fallbackHandler)
-app.use(notFoundHandler)
-app.use(genericErrorHandler)
-
-app.listen(app.get('port'), () => {
-  console.log('Server listening on port %s', app.get('port'))
-})
