@@ -86,22 +86,25 @@ app.post('/move', (req, res) => {
 
   function seek(path, backupGrid) {
     console.log('seek()');
-    let match = false;
+    console.log(possibleDirections);
+    console.log(path);
 
-    possibleDirections.forEach((direction) => {
-      if (path[1][0] === direction.x && path[1][1] === direction.y) {
-        nextMove = direction.move;
-        match = true;
-      }
-    });
-
-    if (!match) {
-      const anotherGrid = backupGrid.clone();
-      backupGrid.setWalkableAt((width - ourHead.x), (height - nearestFood.y), true);
-      const finder = new Pathfinder.AStarFinder();
-      const backupPath = finder.findPath(ourHead.x, ourHead.y, (width - ourHead.x), (height - nearestFood.y), backupGrid);
+    if (path.length) {
+      possibleDirections.forEach((direction) => {
+        if (path[1][0] === direction.x && path[1][1] === direction.y) {
+          nextMove = direction.move;
+          match = true;
+        }
+      });
+    } else {
+      console.log('backup')
+      // let anotherGrid = backupGrid.clone();
+      // backupGrid.setWalkableAt((width - ourHead.x), (height - ourHead.y), true);
+      // const newFinder = new Pathfinder.AStarFinder();
+      // const backupPath = newFinder.findPath(ourHead.x, ourHead.y, (width - ourHead.x), (height - ourHead.x.y), backupGrid);
     
-      seek(backupPath, anotherGrid);
+      // seek(backupPath, anotherGrid);
+      randomMove();
     }
   }
 
@@ -216,6 +219,10 @@ app.post('/move', (req, res) => {
 
   function randomMove() {
     console.log('randomMove()');
+    const allSnakes = snakeArray(ourSnake, enemySnakes)
+    avoidSnakeBody(allSnakes);
+    avoidWalls();
+
     const random = Math.round(Math.random() * (possibleDirections.length - 1));
     if (possibleDirections[random]) {
       nextMove = possibleDirections[random].move
@@ -272,12 +279,10 @@ app.post('/move', (req, res) => {
     return allSnakes;
   }
 
-  const allSnakes = snakeArray(ourSnake, enemySnakes)
-  // avoidSnakeBody(allSnakes);
-  // avoidWalls();
+ 
 
   
-  if (ourSnake.health < 50 || ourLength < 10 || food.length === 0) {
+  if (ourSnake.health < 95 || ourLength < 20 || food.length === 0) {
     eat(pathfinderGrid, ourHead, food);
   } else {
     followTail(pathfinderGrid, ourHead, ourTail);
