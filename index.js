@@ -77,13 +77,8 @@ app.post('/move', (req, res) => {
         if (snake.id !== ourSnake.id) {
           snake.body.forEach((segment, index) => {
             gridRows[segment.y][segment.x] = 1;
-
-            console.log(snake.body[index]);
   
             if (index === 0) {
-              console.log(segment.x + 1)
-              console.log(height);
-
               if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
                 gridRows[segment.y - 1][segment.x] = 1;
               }
