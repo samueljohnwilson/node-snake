@@ -54,6 +54,9 @@ app.post('/move', (req, res) => {
   updateGrid();
   let pathfinderGrid = new Pathfinder.Grid(grid);
 
+  // We are marking all the areas around enemy snake heads as unwalkable
+  // But if no path is found, we remove those and calc again
+
   function updateGrid() {
     for (let i = 0; i < height; i++) {
       const arr = [];
@@ -65,19 +68,45 @@ app.post('/move', (req, res) => {
       gridRows[i] = arr;
     }
 
-    gridRows[ourHead.y][ourHead.x] = 2;
-
     for (let i = 1; i < ourLength; i++) {
       gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1
     }
 
-    if (enemySnakes) {
-      enemySnakes.forEach((enemy) => {
-        enemy.body.forEach((segment) => {
-          gridRows[segment.y][segment.x];
-        });
+    console.log(ourSnake)
+    if (enemySnakes.length) {
+      enemySnakes.forEach((snake) => {
+        if (snake.id !== ourSnake.id) {
+          snake.body.forEach((segment, index) => {
+            gridRows[segment.y][segment.x] = 1;
+
+            console.log(snake.body[index]);
+  
+            if (index === 0) {
+              console.log(segment.x + 1)
+              console.log(height);
+
+              if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
+                gridRows[segment.y - 1][segment.x] = 1;
+              }
+
+              if (segment.y + 1 <= height - 1 && gridRows[segment.y + 1][segment.x] === 0) {
+                gridRows[segment.y + 1][segment.x] = 1;
+              }
+
+              if (segment.x - 1 >= 0 && gridRows[segment.y][segment.x - 1] === 0) {
+                gridRows[segment.y][segment.x - 1] = 1
+              }
+
+              if (segment.x + 1 <= width - 1 && gridRows[segment.y][segment.x + 1] === 0) {
+                gridRows[segment.y][segment.x + 1] = 1;
+              }
+            }
+          });
+        }
       });
     };
+
+    gridRows[ourHead.y][ourHead.x] = 0;
 
     for (row in gridRows) {
       grid.push(gridRows[row]);
@@ -86,20 +115,21 @@ app.post('/move', (req, res) => {
 
   function seek(path, backupGrid) {
     console.log('seek()');
-    console.log(possibleDirections);
-    console.log(path);
 
     if (path.length) {
+      console.log('Next move is x: ' + path[1][0] + ', y: ' + path[1][1]);
       possibleDirections.forEach((direction) => {
         if (path[1][0] === direction.x && path[1][1] === direction.y) {
           nextMove = direction.move;
-          match = true;
         }
       });
     } else {
-      console.log('backup')
+      console.log('oh shit!')
+
+      // Should look at another option for this
+
       // let anotherGrid = backupGrid.clone();
-      // backupGrid.setWalkableAt((width - ourHead.x), (height - ourHead.y), true);
+      // backupGrid.setWalkableAt((ourHead.x), (height - ourHead.y), true);
       // const newFinder = new Pathfinder.AStarFinder();
       // const backupPath = newFinder.findPath(ourHead.x, ourHead.y, (width - ourHead.x), (height - ourHead.x.y), backupGrid);
     
@@ -126,6 +156,7 @@ app.post('/move', (req, res) => {
       });
       
       let finder = new Pathfinder.AStarFinder();
+      pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
       const path = finder.findPath(ourHead.x, ourHead.y, nearestFood.x, nearestFood.y, pathfinderGrid);
       const backupGrid = pathfinderGrid.clone();
 
@@ -138,7 +169,7 @@ app.post('/move', (req, res) => {
   function removeDirection(direction) {
     const index = possibleDirections.indexOf(direction);
     possibleDirections.splice(index, 1);
-    console.log(`...remove ${direction.move}`)
+    console.log(`...removing ${direction.move}`)
   }
 
   function avoidSnakeBody(allSnakes) {
@@ -195,28 +226,6 @@ app.post('/move', (req, res) => {
     seek(path, backupGrid);
   }
 
-  function mode(array) {
-    const modeMap = {};
-    let maxEl = array[0];
-    let maxCount = 0;
-
-    array.forEach((el) => {
-      if (!modeMap[el]) {
-        modeMap[el] = 1;
-      } else {
-        modeMap[el]++;  
-      }
-          
-      if (modeMap[el] > maxCount) {
-        maxEl = el;
-        maxCount = modeMap[el];
-      }
-      
-    });
-
-    return maxEl;
-  }
-
   function randomMove() {
     console.log('randomMove()');
     const allSnakes = snakeArray(ourSnake, enemySnakes)
@@ -231,57 +240,62 @@ app.post('/move', (req, res) => {
     }
   }
 
-  function kill(ourLength, ourHead, enemySnakes) {
-    const shortSnakes = [];
+  function kill(ourLength, ourHead, enemies) {
+    console.log('kill()');
 
-    enemySnakes.forEach((snake) => {
-      if (ourLength > snake.body.length) {
-        shortSnakes.push(snake);
-      }
-    });
+    if (enemies.length) {
+      const shortSnakes = [];
 
-    if (shortSnakes) {
-      let closestKillableDistance = 0;
-      let closestKillableSnake;
-
-      shortSnakes.forEach((shorty) => {
-        const xDistance = ourHead.x - shorty.x;
-        const yDistance = ourHead.y - shorty.y;
-
-
-        if (xDistance + yDistance > closestKillableDistance) {
-          closestKillableSnake = shorty;
+      enemies.forEach((snake) => {
+        if (ourLength > snake.body.length) {
+          shortSnakes.push(snake);
         }
       });
-
-      const aggression = ourLength - closestKillableSnake.body.length;
-
-      if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
-        let finder = new Pathfinder.AStarFinder();
-        pathfinderGrid.setWalkableAt(closestKillableSnake.body.x, closestKillableSnake.body.y, true);
-        const path = finder.findPath(ourHead.x, ourHead.y, closestKillableSnake.body.x, closestKillableSnake.body.y, pathfinderGrid);
-        const backupGrid = pathfinderGrid.clone();
-    
-        seek(path, backupGrid);
+  
+      if (shortSnakes.length) {
+        let closestKillableDistance = 0;
+        let closestKillableSnake;
+  
+        shortSnakes.forEach((shorty) => {
+          const xDistance = ourHead.x - shorty.body[0].x;
+          const yDistance = ourHead.y - shorty.body[0].y;
+  
+  
+          if (xDistance + yDistance > closestKillableDistance) {
+            closestKillableSnake = shorty;
+          }
+        });
+  
+        const aggression = ourLength - closestKillableSnake.body.length;
+  
+        if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
+          let finder = new Pathfinder.AStarFinder();
+          pathfinderGrid.setWalkableAt(closestKillableSnake.body[0].x, closestKillableSnake.body[0].y, true);
+          const path = finder.findPath(ourHead.x, ourHead.y, closestKillableSnake.body[0].x, closestKillableSnake.body[0].y, pathfinderGrid);
+          const backupGrid = pathfinderGrid.clone();
+      
+          seek(path, backupGrid);
+        }
       }
     }
   }
 
   
-  function snakeArray(ourSnake, enemySnakes) {
+  function snakeArray(ourSnake, enemies) {
     const allSnakes = [];
     
     allSnakes.push(ourSnake);
-    enemySnakes.forEach((snake) => {
+    enemies.forEach((snake) => {
       allSnakes.push(snake);
     });
 
     return allSnakes;
   }
 
- 
+  const victims = snakeArray(ourSnake, enemySnakes);
 
-  
+  // kill(ourLength, ourHead, victims);
+
   if (ourSnake.health < 95 || ourLength < 20 || food.length === 0) {
     eat(pathfinderGrid, ourHead, food);
   } else {
@@ -292,15 +306,15 @@ app.post('/move', (req, res) => {
     followTail(pathfinderGrid, ourHead, ourTail);
   }
   
-  // if (!nextMove) {
-  //   randomMove();
-  // }
+  if (!nextMove) {
+    randomMove();
+  }
 
   const data = {
     move: nextMove
   }
 
-  console.log(data);
+  console.log('Sending to server: ' + data);
 
   return res.json(data);
 });
@@ -325,3 +339,26 @@ app.use(genericErrorHandler)
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'))
 })
+
+
+// function mode(array) {
+//   const modeMap = {};
+//   let maxEl = array[0];
+//   let maxCount = 0;
+
+//   array.forEach((el) => {
+//     if (!modeMap[el]) {
+//       modeMap[el] = 1;
+//     } else {
+//       modeMap[el]++;  
+//     }
+        
+//     if (modeMap[el] > maxCount) {
+//       maxEl = el;
+//       maxCount = modeMap[el];
+//     }
+    
+//   });
+
+//   return maxEl;
+// }
