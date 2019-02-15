@@ -72,7 +72,6 @@ app.post('/move', (req, res) => {
       gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1
     }
 
-    console.log(ourSnake)
     if (enemySnakes.length) {
       enemySnakes.forEach((snake) => {
         if (snake.id !== ourSnake.id) {
@@ -314,7 +313,7 @@ app.post('/move', (req, res) => {
     move: nextMove
   }
 
-  console.log('Sending to server: ' + data);
+  console.log('Sending to server: ' + JSON.stringify(data));
 
   return res.json(data);
 });
