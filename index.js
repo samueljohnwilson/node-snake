@@ -95,6 +95,11 @@ app.post('/move', (req, res) => {
                 gridRows[segment.y][segment.x + 1] = 1;
               }
             }
+            
+            // Need to also check if the enemy's head is 1 step from food here
+            if (index === snake.length - 1) {
+              gridRows[segment.y][segment.x] = 0;
+            }
           });
         }
       });
@@ -105,6 +110,8 @@ app.post('/move', (req, res) => {
     for (row in gridRows) {
       grid.push(gridRows[row]);
     }
+
+    console.log(grid);
   }
 
   function seek(path, backupGrid) {
@@ -230,7 +237,7 @@ app.post('/move', (req, res) => {
     if (possibleDirections[random]) {
       nextMove = possibleDirections[random].move
     } else {
-      console.log('Something broke.')
+      console.log('Dead end.')
     }
   }
 
