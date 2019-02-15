@@ -217,6 +217,7 @@ app.post('/move', (req, res) => {
     });
   }
 
+  // Need to convert this so that we follow other snake tails too
   function followTail(pathfinderGrid, ourHead, ourTail) {
     console.log('followTail()');
     pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
