@@ -1,15 +1,15 @@
-const bodyParser = require('body-parser')
-const express = require('express')
-const logger = require('morgan')
-const app = express()
+const bodyParser = require('body-parser');
+const express = require('express');
+const logger = require('morgan');
+const Pathfinder = require('pathfinding');
 const {
   fallbackHandler,
   notFoundHandler,
   genericErrorHandler,
-  poweredByHandler
+  poweredByHandler,
 } = require('./handlers.js');
 
-const Pathfinder = require('pathfinding');
+const app = express();
 
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env
@@ -60,11 +60,10 @@ app.post('/move', (req, res) => {
   function updateGrid() {
     for (let i = 0; i < height; i++) {
       const arr = [];
-  
       for (let j = 0; j < width; j++) {
         arr.push(0);
       }
-    
+
       gridRows[i] = arr;
     }
 
@@ -77,7 +76,7 @@ app.post('/move', (req, res) => {
         if (snake.id !== ourSnake.id) {
           snake.body.forEach((segment, index) => {
             gridRows[segment.y][segment.x] = 1;
-  
+
             if (index === 0) {
               if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
                 gridRows[segment.y - 1][segment.x] = 1;
@@ -95,7 +94,7 @@ app.post('/move', (req, res) => {
                 gridRows[segment.y][segment.x + 1] = 1;
               }
             }
-            
+
             // Need to also check if the enemy's head is 1 step from food here
             if (index === snake.length - 1) {
               gridRows[segment.y][segment.x] = 0;
@@ -217,15 +216,23 @@ app.post('/move', (req, res) => {
     });
   }
 
+  function setPathfinder(pathfinderGrid, start, target) {
+    const finder = new Pathfinder.AStarFinder();
+    const pathfinding = {};
+    pathfinderGrid.setWalkableAt(start.x, start.y, true);
+    pathfinderGrid.setWalkableAt(start.x, start.y, true);
+    pathfinding.path = finder.findPath(start.x, start.y, target.x, target.y, pathfinderGrid);
+    pathfinding.backupGrid = pathfinderGrid.clone();
+
+    return pathfinding;
+  }
+
   // Need to convert this so that we follow other snake tails too
   function followTail(pathfinderGrid, ourHead, ourTail) {
     console.log('followTail()');
-    pathfinderGrid.setWalkableAt(ourTail.x, ourTail.y, true);
-    let finder = new Pathfinder.AStarFinder();
-    const path = finder.findPath(ourHead.x, ourHead.y, ourTail.x, ourTail.y, pathfinderGrid);
-    const backupGrid = pathfinderGrid.clone();
+    const pathfinding = setPathfinder(pathfinderGrid, ourHead, ourTail)
 
-    seek(path, backupGrid);
+    seek(pathfinding.path, pathfinding.backupGrid);
   }
 
   function randomMove() {
