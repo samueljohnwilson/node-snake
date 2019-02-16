@@ -13,11 +13,11 @@ const app = express();
 
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env
-app.set('port', (process.env.PORT || 9001))
-app.enable('verbose errors')
-app.use(logger('dev'))
-app.use(bodyParser.json())
-app.use(poweredByHandler)
+app.set('port', (process.env.PORT || 9001));
+app.enable('verbose errors');
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(poweredByHandler);
 
 // Initializes a grid object for the easystar library
 const gridRows = {};
@@ -29,15 +29,20 @@ app.post('/start', (req, res) => {
 
   const data = {
     color: '#d3d3d3',
-  }
+  };
 
-  return res.json(data)
+  return res.json(data);
 });
 
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
-  const { board, you: ourSnake } = req.body
-  const { height, width, food, snakes: enemySnakes } = board;
+  const { board, you: ourSnake } = req.body;
+  const { 
+    height,
+    width,
+    food,
+    snakes: enemySnakes,
+  } = board;
   const ourHead = ourSnake.body[0];
   const ourTail = ourSnake.body[ourSnake.body.length - 1];
   const ourLength = ourSnake.body.length;
