@@ -88,13 +88,10 @@ app.post('/move', (req, res) => {
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  pathObject.target = null;
   let nextMove = false;
 
   console.log(pathObject);
-
-  // if (pathToVictim) {
-  //   console.log('pathToVictim');
-  //   nextMove = pathToVictim;
 
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
