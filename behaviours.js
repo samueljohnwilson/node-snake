@@ -57,6 +57,7 @@ function kill(pathObject, ourLength, enemies) {
 
   if (closestKillableSnake) {
     const aggression = ourLength - closestKillableSnake.body.length;
+    console.log(closestKillableSnake)
 
     if (Math.abs(closestKillableSnake.body[0].x) < aggression && Math.abs(closestKillableSnake.body[0].y) < aggression) {
       pathObject.target = closestKillableSnake.body[0];
