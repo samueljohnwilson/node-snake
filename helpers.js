@@ -116,6 +116,7 @@ function findEnemyHeads(snakes) {
     const snakeHead = {};
     snakeHead.x = snake.body[0].x;
     snakeHead.y = snake.body[0].y;
+    snakeHead.id = snake.id;
     heads.push(snakeHead);
   });
 

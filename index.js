@@ -84,16 +84,19 @@ app.post('/move', (req, res) => {
     width: width
   }
   
+  // let pathToVictim = kill(pathObject, ourLength, enemies);
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  let pathToVictim = kill(pathObject, ourLength, enemies);
   let nextMove = false;
 
-  if (pathToVictim) {
-    console.log('pathToVictim');
-    nextMove = pathToVictim;
-  } else if (nearestFood && pathToFood) {
+  console.log(pathObject);
+
+  // if (pathToVictim) {
+  //   console.log('pathToVictim');
+  //   nextMove = pathToVictim;
+
+  if (nearestFood && pathToFood) {
     console.log('pathToFood');
     nextMove = pathToFood;
   } else if (pathToOwnTail) {
@@ -109,12 +112,8 @@ app.post('/move', (req, res) => {
     pathToFood = eat(pathObject, nearestFood);
     pathToOwnTail = followOwnTail(pathObject, ourTail);
     pathToEnemyTail = followEnemyTail(pathObject, enemies);
-    pathToVictim = kill(pathObject, ourLength, enemies);
 
-    if (pathToVictim) {
-      console.log('newgrid attack');
-      nextMove = pathToVictim;
-    } else if (nearestFood && pathToFood) {
+    if (nearestFood && pathToFood) {
       console.log('newgrid food');
       nextMove = pathToFood;
     } else if (pathToOwnTail) {
