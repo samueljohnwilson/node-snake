@@ -2,13 +2,26 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const logger = require('morgan');
 const {
+  createGrid,
+  enemyArray,
   findEnemyHeads,
   findEnemyTails,
+  findKillableSnakes,
+  findLowerHealthSnakes,
   findNearestFood,
+  findShortSnakes,
   followPath,
+  randomMove,
   snakeArray,
   updateGrid
 } = require('./helpers.js');
+
+const {
+  eat,
+  followEnemyTail,
+  followOwnTail,
+  kill
+} = require('./behaviours.js');
 
 const {
   fallbackHandler,
@@ -33,7 +46,7 @@ app.post('/start', (req, res) => {
   console.log('Yaaaasssssssss');
 
   const data = {
-    color: '#d3d3d3',
+    color: '#770001'
   };
 
   return res.json(data);
@@ -46,7 +59,7 @@ app.post('/move', (req, res) => {
     height,
     width,
     food,
-    snakes: enemySnakes,
+    snakes: allSnakes,
   } = board;
   const ourHead = ourSnake.body[0];
   const ourTail = ourSnake.body[ourSnake.body.length - 1];
@@ -58,74 +71,47 @@ app.post('/move', (req, res) => {
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   const possibleDirections = [left, right, up, down];
 
-  let grid = updateGrid(height, width, ourSnake, enemySnakes);
-
-  function eat(grid, ourHead, targetFood, possibleDirections, ourSnake, enemySnakes) {
-    return followPath(grid, ourHead, targetFood, possibleDirections, ourSnake, enemySnakes);
+  const enemies = enemyArray(allSnakes, ourSnake);
+  let grid = createGrid(height, width, ourSnake, enemies);
+  const pathObject = {
+    grid: grid,
+    start: ourHead,
+    possibleDirections: possibleDirections,
+    ourSnake: ourSnake,
+    allSnakes: allSnakes,
+    height: height,
+    width: width
   }
 
-  // Need to convert this so that we follow other snake tails too
-  function followTail(grid, ourHead, ourTail, possibleDirections, ourSnake, enemySnakes) {
-    console.log('followTail()');
-    return followPath(grid, ourHead, ourTail, possibleDirections, ourSnake, enemySnakes)
-  }
-
-  function kill(grid, ourLength, ourHead, enemies) {
-    console.log('kill()');
-
-    if (enemies.length) {
-      const shortSnakes = [];
-
-      enemies.forEach((snake) => {
-        if (ourLength > snake.body.length) {
-          shortSnakes.push(snake);
-        }
-      });
-  
-      if (shortSnakes.length) {
-        let closestKillableDistance = 0;
-        let closestKillableSnake;
-  
-        shortSnakes.forEach((shorty) => {
-          const xDistance = ourHead.x - shorty.body[0].x;
-          const yDistance = ourHead.y - shorty.body[0].y;
-  
-  
-          if (xDistance + yDistance > closestKillableDistance) {
-            closestKillableSnake = shorty;
-          }
-        });
-  
-        const aggression = ourLength - closestKillableSnake.body.length;
-  
-        if (Math.abs(xDistance) < aggression && Math.abs(yDistance) < aggression) {
-          followPath(grid, finder, ourHead, closestKillableSnake.body[0], possibleDirections, ourSnake, enemySnakes);
-        }
-      }
-    }
-  }
-
-  // const victims = snakeArray(ourSnake, enemySnakes);
   const nearbyFood = findNearestFood(ourHead, food);
-  // const enemyTails = findEnemyTails(victims);
-  // const enemyHeads = findEnemyHeads(victims);
-  // kill(ourLength, ourHead, victims);
-
+  const lowerHealthEnemies = findLowerHealthSnakes(ourSnake, enemies);
+  
+  let pathToFood = eat(pathObject, nearbyFood);
+  let pathToOwnTail = followOwnTail(pathObject, ourTail);
+  let pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  let pathToVictim = kill(pathObject, ourLength, enemies);
   let nextMove = false;
 
-  if ((ourSnake.health < 95 || ourLength < 20) && nearbyFood) {
-    nextMove = eat(grid, ourHead, nearbyFood, possibleDirections, ourSnake, enemySnakes);
-    console.log(nextMove)
+  if (pathToVictim) {
+    nextMove = pathToVictim;
+  } else if (nearbyFood && pathToFood) {
+    nextMove = pathToFood;
+  } else if (pathToOwnTail) {
+    nextMove = pathToOwnTail;
+  } else if (pathToEnemyTail) {
+    nextMove = pathToEnemyTail;
   } else {
-    nextMove = followTail(grid, ourHead, ourTail, possibleDirections, ourSnake, enemySnakes);
+    nextMove = randomMove(pathObject);
   }
-  
+
   if (!nextMove) {
-    nextMove = followTail(grid, ourHead, ourTail, possibleDirections, ourSnake, enemySnakes);
-  }
-  
-  if (!nextMove) {
-    nextMove = 'left';
+    objectPath.grid = updateGrid(height, width, ourSnake, enemies);
+
+    pathToFood = eat(pathObject, nearbyFood);
+    pathToOwnTail = followOwnTail(pathObject, ourTail);
+    pathToEnemyTail = followEnemyTail(pathObject, enemies);
+    pathToVictim = kill(pathObject, ourLength, enemies);
+
   }
 
   const data = {
