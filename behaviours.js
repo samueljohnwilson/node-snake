@@ -14,6 +14,7 @@ const {
 } = require('./helpers.js');
 
 function eat(pathObject, targetFood) {
+  // console.log('eat')
   if (!targetFood) {
     return false;
   }
@@ -23,12 +24,18 @@ function eat(pathObject, targetFood) {
 }
 
 function followOwnTail(pathObject, ourTail) {
+  if (pathObject.ourSnake.body.length < 3) {
+    return false;
+  }
+
+  // console.log('followOwnTail')
   pathObject.target = ourTail;
 
   return followPath(pathObject)
 }
 
 function followEnemyTail(pathObject, enemies) {
+  // console.log('followEnemyTail')
   const enemyTails = findEnemyTails(enemies);
   if (enemyTails.length) {
     for (let i = 0; i < enemyTails.length; i++) {
@@ -44,6 +51,7 @@ function followEnemyTail(pathObject, enemies) {
 }
 
 function kill(pathObject, ourLength, enemies) {
+  // console.log('kill')
   const shortSnakes = findShortSnakes(pathObject, enemies);
   const closestKillableSnake = findKillableSnakes(pathObject, shortSnakes);
 

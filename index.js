@@ -71,8 +71,9 @@ app.post('/move', (req, res) => {
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   const possibleDirections = [left, right, up, down];
 
+  const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
-  let grid = createGrid(height, width, ourSnake, enemies);
+  const grid = createGrid(height, width, ourSnake, enemies);
   const pathObject = {
     grid: grid,
     start: ourHead,
@@ -82,37 +83,54 @@ app.post('/move', (req, res) => {
     height: height,
     width: width
   }
-
-  const nearbyFood = findNearestFood(ourHead, food);
-  const lowerHealthEnemies = findLowerHealthSnakes(ourSnake, enemies);
   
-  let pathToFood = eat(pathObject, nearbyFood);
+  let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
   let pathToVictim = kill(pathObject, ourLength, enemies);
   let nextMove = false;
 
   if (pathToVictim) {
+    console.log('pathToVictim');
     nextMove = pathToVictim;
-  } else if (nearbyFood && pathToFood) {
+  } else if (nearestFood && pathToFood) {
+    console.log('pathToFood');
     nextMove = pathToFood;
   } else if (pathToOwnTail) {
+    console.log('pathToOwnTail');
     nextMove = pathToOwnTail;
   } else if (pathToEnemyTail) {
+    console.log('pathToEnemyTail');
     nextMove = pathToEnemyTail;
-  } else {
-    nextMove = randomMove(pathObject);
   }
 
   if (!nextMove) {
-    objectPath.grid = updateGrid(height, width, ourSnake, enemies);
-
-    pathToFood = eat(pathObject, nearbyFood);
+    pathObject.grid = updateGrid(height, width, ourSnake, enemies);
+    pathToFood = eat(pathObject, nearestFood);
     pathToOwnTail = followOwnTail(pathObject, ourTail);
     pathToEnemyTail = followEnemyTail(pathObject, enemies);
     pathToVictim = kill(pathObject, ourLength, enemies);
 
+    if (pathToVictim) {
+      console.log('newgrid attack');
+      nextMove = pathToVictim;
+    } else if (nearestFood && pathToFood) {
+      console.log('newgrid food');
+      nextMove = pathToFood;
+    } else if (pathToOwnTail) {
+      console.log('newgrid ownTail');
+      nextMove = pathToOwnTail;
+    } else if (pathToEnemyTail) {
+      console.log('newgrid enemyTail');
+      nextMove = pathToEnemyTail;
+    }
   }
+
+  if (!nextMove) {
+    nextMove = randomMove(pathObject);
+  }
+
+  console.log(grid);
 
   const data = {
     move: nextMove
