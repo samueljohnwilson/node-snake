@@ -48,7 +48,7 @@ function createGrid(height, width, ourSnake, enemySnakes) {
         snake.body.forEach((segment, index) => {
           gridRows[segment.y][segment.x] = 1;
 
-          if (index === 0) {
+          if (index === 0 && snake.body.length < ourSnake.body.length) {
             if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
               gridRows[segment.y - 1][segment.x] = 1;
             }
