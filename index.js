@@ -79,6 +79,7 @@ app.post('/move', (req, res) => {
     start: ourHead,
     possibleDirections: possibleDirections,
     ourSnake: ourSnake,
+    enemySnakes: enemySnakes,
     allSnakes: allSnakes,
     height: height,
     width: width
