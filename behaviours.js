@@ -24,7 +24,7 @@ function eat(pathObject, targetFood, distance = 1) {
   for (let i = 0; i < enemies.length; i++) {
     const enemyDistance = Math.abs(enemies[i].body[0].x - targetFood.x) + Math.abs(enemies[i].body[0].y - targetFood.y);
     const ourDistance = Math.abs(pathObject.ourSnake.body[0].x - targetFood.x) + Math.abs(pathObject.ourSnake.body[0].y - targetFood.y);
-    if (enemies.body.length > pathObject.ourSnake.body.length && enemyDistance === distance && ourDistance === distance) {
+    if (enemies.body.length >= pathObject.ourSnake.body.length && enemyDistance === distance && ourDistance === distance) {
       return false;
     }
   }
