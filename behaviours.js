@@ -11,6 +11,7 @@ const {
   findNearestFood,
   findShortSnakes,
   followPath,
+  nextPathExists,
   randomMove,
   snakeArray,
   testPaths,
@@ -25,31 +26,21 @@ function eat(pathObject, targetFood) {
 
   pathObject.target = targetFood;
   const direction = followPath(pathObject);
-  return direction.move;
+
+  const last = pathObject.fullPath[pathObject.fullPath.length - 1];
+  pathObject.target = { x: last[0], y: last[1] };
+
+  const isNextPath = nextPathExists(pathObject);
+
+  if (direction && isNextPath) {
+    return direction.move;
+  }
+
+  return false;
 }
 
-// I was thinking for the space filling model (this would be very expensive, but might still work)
-// a) we find the shortest path using the normal method
-// b) we mark the first step in that path as unwalkable
-// c) we find the new shortest path
-//  i) if it exists, we start again at `b`
-//  ii) if it doesn’t, we move to the point found in `a`
-
-// By using that recursively, we basically eliminate all the ‘best’ moves and are left with the ‘worst’ moves
-
-// [ [ 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 1, 1, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 1, 2, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 ],
-//   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-//   [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ]
-
 function fillSpace(pathObject) {
-  const head = pathObject.ourSnake.body && pathObject.ourSnake.body[0];
+  const head = pathObject.ourSnake.body[0];
   const grid = pathObject.grid;
   let shortest = pathObject.width;
   let coord;

@@ -14,8 +14,10 @@ const {
   findNearestFood,
   findShortSnakes,
   followPath,
+  nextPathExists,
   randomMove,
   snakeArray,
+  testPaths,
   updateGrid
 } = require('./helpers.js');
 
@@ -88,15 +90,12 @@ app.post('/move', (req, res) => {
     height: height,
     width: width
   }
-  
-  // let pathToVictim = kill(pathObject, ourLength, enemies);
+
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  let fillingSpace = fillSpace(pathObject);
+  // let fillingSpace = fillSpace(pathObject);
   let nextMove = false;
-
-  console.log(pathToOwnTail)
 
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
@@ -107,10 +106,12 @@ app.post('/move', (req, res) => {
   } else if (pathToEnemyTail) {
     console.log('pathToEnemyTail');
     nextMove = pathToEnemyTail;
-  } else {
-    console.log('fillingSpace');
-    nextMove = fillingSpace;
-  }
+  } 
+  
+  // else {
+  //   console.log('fillingSpace');
+  //   nextMove = fillingSpace;
+  // }
 
   // if (!nextMove) {
   //   pathObject.grid = updateGrid(height, width, ourSnake, enemies);
@@ -131,6 +132,7 @@ app.post('/move', (req, res) => {
   // }
 
   if (!nextMove) {
+    console.log(pathObject.possibleDirections)
     nextMove = randomMove(pathObject);
   }
 

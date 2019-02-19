@@ -28,6 +28,23 @@ function avoidObstacles(height, width, allSnakes, possibleDirections) {
   avoidWalls(height, width, possibleDirections);
 }
 
+function nextPathExists(pathObject) {
+  const path = pathObject.fullPath;
+  const currentPath = [];
+  
+  for (let i = 0; i < path.length - 1; i++) {
+    currentPath.push({ x: path[i][0], y: path[i][1] });
+  }
+
+  const pathExists = followPath(pathObject, true, currentPath);
+
+  if (pathExists) {
+    return path;
+  }
+
+  return false;
+}
+
 function createGrid(height, width, ourSnake, enemySnakes) {
   // console.log('createGrid')
   const gridRows = {};
@@ -219,6 +236,7 @@ function followPath(pathObject, bool = true, blocked = []) {
     pathObject.possibleDirections.forEach((direction) => {
       if (path[1][0] === direction.x && path[1][1] === direction.y) {
         move = direction;
+        pathObject.fullPath = path;
       }
     });
   }
@@ -324,6 +342,7 @@ module.exports = {
   findNearestFood,
   findShortSnakes,
   followPath,
+  nextPathExists,
   randomMove,
   snakeArray,
   testPaths,
