@@ -13,14 +13,19 @@ function avoidSnakeBody(allSnakes, possibleDirections) {
   });
 }
 
-function avoidWalls(pathObject, possibleDirections) {
+function avoidWalls(height, width, possibleDirections) {
   // console.log('avoidWalls')
   possibleDirections.forEach((direction) => {
-    if (direction.x < 0 || direction.x === pathObject.width || direction.y < 0 || direction.y === pathObject.height) {
+    if (direction.x < 0 || direction.x === width || direction.y < 0 || direction.y === height) {
       removeDirection(possibleDirections, direction);
-      avoidWalls(pathObject, possibleDirections);
+      avoidWalls(height, width, possibleDirections);
     }
   });
+}
+
+function avoidObstacles(height, width, allSnakes, possibleDirections) {
+  avoidSnakeBody(allSnakes, possibleDirections);
+  avoidWalls(height, width, possibleDirections);
 }
 
 function createGrid(height, width, ourSnake, enemySnakes) {
@@ -194,19 +199,26 @@ function findShortSnakes(pathObject, snakes) {
   return shortSnakes;
 }
 
-function followPath(pathObject) {
+function followPath(pathObject, bool = true, blocked = []) {
   // console.log('followPath')
   let grid = new Pathfinder.Grid(pathObject.grid);
   let finder = new Pathfinder.AStarFinder();
   grid.setWalkableAt(pathObject.start.x, pathObject.start.y, true);
-  grid.setWalkableAt(pathObject.target.x, pathObject.target.y, true);
+  grid.setWalkableAt(pathObject.target.x, pathObject.target.y, bool);
+
+  if (blocked.length) {
+    blocked.forEach((space) => {
+      grid.setWalkableAt(space.x, space.y, false);
+    });
+  }
+
   const path = finder.findPath(pathObject.start.x, pathObject.start.y, pathObject.target.x, pathObject.target.y, grid);
   let move = false;
 
   if (path.length) {
     pathObject.possibleDirections.forEach((direction) => {
       if (path[1][0] === direction.x && path[1][1] === direction.y) {
-        move = direction.move;
+        move = direction;
       }
     });
   }
@@ -215,18 +227,15 @@ function followPath(pathObject) {
 }
 
 function randomMove(pathObject) {
-  // console.log('randomMove');
+  console.log('randomMove');
   try {
     let moves = pathObject.possibleDirections;
-
-    avoidSnakeBody(pathObject.allSnakes, moves);
-    avoidWalls(pathObject, moves);
   
     if (moves.length) {
       const random = Math.round(Math.random() * (moves.length - 1));
       move = moves[random].move
     } else {
-      // console.log('Dead end!')
+      console.log('Dead end!')
     }
   
     return move;
@@ -253,6 +262,18 @@ function snakeArray(snakes) {
 
   return allSnakes;
 };
+
+function testPaths(pathObject, bool, pathArr) {
+  const path = followPath(pathObject, bool, pathArr);
+  
+  if (path) {
+    pathArr.push(path);
+    pathObject.target = { x: path.x, y: path.y };
+    testPaths(pathObject, bool, pathArr);
+  }
+
+  return path;
+}
 
 function updateGrid(height, width, ourSnake, enemySnakes) {
   // console.log('updateGrid');
@@ -291,6 +312,9 @@ function updateGrid(height, width, ourSnake, enemySnakes) {
 }
 
 module.exports = {
+  avoidSnakeBody,
+  avoidObstacles,
+  avoidWalls,
   createGrid,
   enemyArray,
   findEnemyHeads,
@@ -302,5 +326,6 @@ module.exports = {
   followPath,
   randomMove,
   snakeArray,
+  testPaths,
   updateGrid
 }

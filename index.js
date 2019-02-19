@@ -2,6 +2,9 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const logger = require('morgan');
 const {
+  avoidSnakeBody,
+  avoidObstacles,
+  avoidWalls,
   createGrid,
   enemyArray,
   findEnemyHeads,
@@ -18,6 +21,7 @@ const {
 
 const {
   eat,
+  fillSpace,
   followEnemyTail,
   followOwnTail,
   kill
@@ -70,6 +74,7 @@ app.post('/move', (req, res) => {
   const up = { x: ourHead.x, y: ourHead.y - 1, move: 'up' };
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   const possibleDirections = [left, right, up, down];
+  avoidObstacles(height, width, allSnakes, possibleDirections);
 
   const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
@@ -88,10 +93,10 @@ app.post('/move', (req, res) => {
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  pathObject.target = null;
+  let fillingSpace = fillSpace(pathObject);
   let nextMove = false;
 
-  console.log(pathObject);
+  console.log(pathToOwnTail)
 
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
@@ -102,31 +107,34 @@ app.post('/move', (req, res) => {
   } else if (pathToEnemyTail) {
     console.log('pathToEnemyTail');
     nextMove = pathToEnemyTail;
+  } else {
+    console.log('fillingSpace');
+    nextMove = fillingSpace;
   }
 
-  if (!nextMove) {
-    pathObject.grid = updateGrid(height, width, ourSnake, enemies);
-    pathToFood = eat(pathObject, nearestFood);
-    pathToOwnTail = followOwnTail(pathObject, ourTail);
-    pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  // if (!nextMove) {
+  //   pathObject.grid = updateGrid(height, width, ourSnake, enemies);
+  //   pathToFood = eat(pathObject, nearestFood);
+  //   pathToOwnTail = followOwnTail(pathObject, ourTail);
+  //   pathToEnemyTail = followEnemyTail(pathObject, enemies);
 
-    if (nearestFood && pathToFood) {
-      console.log('newgrid food');
-      nextMove = pathToFood;
-    } else if (pathToOwnTail) {
-      console.log('newgrid ownTail');
-      nextMove = pathToOwnTail;
-    } else if (pathToEnemyTail) {
-      console.log('newgrid enemyTail');
-      nextMove = pathToEnemyTail;
-    }
-  }
+  //   if (nearestFood && pathToFood) {
+  //     console.log('newgrid food');
+  //     nextMove = pathToFood;
+  //   } else if (pathToOwnTail) {
+  //     console.log('newgrid ownTail');
+  //     nextMove = pathToOwnTail;
+  //   } else if (pathToEnemyTail) {
+  //     console.log('newgrid enemyTail');
+  //     nextMove = pathToEnemyTail;
+  //   }
+  // }
 
   if (!nextMove) {
     nextMove = randomMove(pathObject);
   }
 
-  console.log(grid);
+  // console.log(grid);
 
   const data = {
     move: nextMove
