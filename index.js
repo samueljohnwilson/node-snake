@@ -81,15 +81,18 @@ app.post('/move', (req, res) => {
   const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
   const grid = createGrid(height, width, ourSnake, enemies);
+  console.log(enemies);
   const pathObject = {
     grid: grid,
     start: ourHead,
     possibleDirections: possibleDirections,
     ourSnake: ourSnake,
+    enemySnakes: enemies,
     allSnakes: allSnakes,
     height: height,
     width: width
   }
+<<<<<<< HEAD
 
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
@@ -102,6 +105,14 @@ app.post('/move', (req, res) => {
 
   // console.log(pathObject.paths);
 
+=======
+  
+  let pathToFood = eat(pathObject, nearestFood);
+  let pathToOwnTail = followOwnTail(pathObject, ourTail);
+  let pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  let nextMove = false;
+
+>>>>>>> master
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
     nextMove = pathToFood;
@@ -143,8 +154,11 @@ app.post('/move', (req, res) => {
     nextMove = randomMove(pathObject);
   }
 
+<<<<<<< HEAD
   // console.log(grid);
 
+=======
+>>>>>>> master
   const data = {
     move: nextMove
   }
