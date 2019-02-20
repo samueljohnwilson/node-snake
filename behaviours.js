@@ -27,9 +27,6 @@ function eat(pathObject, targetFood) {
   pathObject.target = targetFood;
   const direction = followPath(pathObject);
 
-  const last = pathObject.fullPath[pathObject.fullPath.length - 1];
-  pathObject.target = { x: last[0], y: last[1] };
-
   const isNextPath = nextPathExists(pathObject);
 
   if (direction && isNextPath) {
@@ -122,7 +119,7 @@ function fillSpace(pathObject) {
   if (shortest < pathObject.width) {
     pathObject.target = coord;
     const pathArr = [];
-    const direction = testPaths(pathObject, true, pathArr);
+    const direction = testPaths(pathObject, pathArr);
     return direction.move;
   }
 }
@@ -132,7 +129,7 @@ function followOwnTail(pathObject, ourTail) {
     return false;
   }
 
-  // console.log('followOwnTail')
+  pathObject.start = pathObject.ourSnake.body[0];
   pathObject.target = ourTail;
 
   const direction = followPath(pathObject);

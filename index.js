@@ -91,22 +91,29 @@ app.post('/move', (req, res) => {
     width: width
   }
 
-  let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  pathObject.paths = [pathToEnemyTail, pathToOwnTail]
+  let pathToFood = eat(pathObject, nearestFood);
+
   // let fillingSpace = fillSpace(pathObject);
+  
   let nextMove = false;
+
+  // console.log(pathObject.paths);
 
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
     nextMove = pathToFood;
-  } else if (pathToOwnTail) {
-    console.log('pathToOwnTail');
-    nextMove = pathToOwnTail;
-  } else if (pathToEnemyTail) {
-    console.log('pathToEnemyTail');
-    nextMove = pathToEnemyTail;
   } 
+  
+  // else if (pathToOwnTail) {
+  //   console.log('pathToOwnTail');
+  //   nextMove = pathToOwnTail;
+  // } else if (pathToEnemyTail) {
+  //   console.log('pathToEnemyTail');
+  //   nextMove = pathToEnemyTail;
+  // } 
   
   // else {
   //   console.log('fillingSpace');
@@ -132,7 +139,7 @@ app.post('/move', (req, res) => {
   // }
 
   if (!nextMove) {
-    console.log(pathObject.possibleDirections)
+    // console.log(pathObject.possibleDirections)
     nextMove = randomMove(pathObject);
   }
 

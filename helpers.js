@@ -7,6 +7,7 @@ function avoidSnakeBody(allSnakes, possibleDirections) {
       snake.body.forEach((segment) => {
         if (direction.x === segment.x && direction.y === segment.y) {
           removeDirection(possibleDirections, direction);
+          avoidSnakeBody(allSnakes, possibleDirections);
         }
       });
     });
@@ -30,16 +31,30 @@ function avoidObstacles(height, width, allSnakes, possibleDirections) {
 
 function nextPathExists(pathObject) {
   const path = pathObject.fullPath;
+  const last = pathObject.fullPath[pathObject.fullPath.length - 1];
   const currentPath = [];
+  let pathExists = false;
   
-  for (let i = 0; i < path.length - 1; i++) {
+  for (let i = 0; i < path.length; i++) {
     currentPath.push({ x: path[i][0], y: path[i][1] });
   }
 
-  const pathExists = followPath(pathObject, true, currentPath);
+  pathObject.start = { x: last[0], y: last[1] };
+
+  //This is returning a direction but it needs coords leading to our tail or elsewhere
+  pathObject.target = {
+    x: pathObject.ourSnake.body[pathObject.ourSnake.body.length - 1].x,
+    y: pathObject.ourSnake.body[pathObject.ourSnake.body.length - 1].y
+  }
+
+  console.log(pathObject)
+
+  pathExists = followPath(pathObject, currentPath);
+
+  console.log(pathExists)
 
   if (pathExists) {
-    return path;
+    return true;
   }
 
   return false;
@@ -216,18 +231,19 @@ function findShortSnakes(pathObject, snakes) {
   return shortSnakes;
 }
 
-function followPath(pathObject, bool = true, blocked = []) {
+function followPath(pathObject, blocked) {
   // console.log('followPath')
   let grid = new Pathfinder.Grid(pathObject.grid);
   let finder = new Pathfinder.AStarFinder();
-  grid.setWalkableAt(pathObject.start.x, pathObject.start.y, true);
-  grid.setWalkableAt(pathObject.target.x, pathObject.target.y, bool);
 
-  if (blocked.length) {
+  if (blocked && blocked.length) {
     blocked.forEach((space) => {
       grid.setWalkableAt(space.x, space.y, false);
     });
   }
+
+  grid.setWalkableAt(pathObject.start.x, pathObject.start.y, true);
+  grid.setWalkableAt(pathObject.target.x, pathObject.target.y, true);
 
   const path = finder.findPath(pathObject.start.x, pathObject.start.y, pathObject.target.x, pathObject.target.y, grid);
   let move = false;
@@ -281,13 +297,13 @@ function snakeArray(snakes) {
   return allSnakes;
 };
 
-function testPaths(pathObject, bool, pathArr) {
-  const path = followPath(pathObject, bool, pathArr);
+function testPaths(pathObject, pathArr) {
+  const path = followPath(pathObject, pathArr);
   
   if (path) {
     pathArr.push(path);
     pathObject.target = { x: path.x, y: path.y };
-    testPaths(pathObject, bool, pathArr);
+    testPaths(pathObject, pathArr);
   }
 
   return path;
