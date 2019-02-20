@@ -79,20 +79,16 @@ app.post('/move', (req, res) => {
     start: ourHead,
     possibleDirections: possibleDirections,
     ourSnake: ourSnake,
-    enemySnakes: enemySnakes,
+    enemySnakes: enemies,
     allSnakes: allSnakes,
     height: height,
     width: width
   }
   
-  // let pathToVictim = kill(pathObject, ourLength, enemies);
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  pathObject.target = null;
   let nextMove = false;
-
-  console.log(pathObject);
 
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
@@ -124,10 +120,10 @@ app.post('/move', (req, res) => {
   }
 
   if (!nextMove) {
-    nextMove = randomMove(pathObject);
+    nextMove = 'right';
   }
 
-  console.log(grid);
+  // console.log(grid);
 
   const data = {
     move: nextMove
