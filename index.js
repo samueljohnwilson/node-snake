@@ -92,27 +92,12 @@ app.post('/move', (req, res) => {
     height: height,
     width: width
   }
-<<<<<<< HEAD
-
-  let pathToOwnTail = followOwnTail(pathObject, ourTail);
-  let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  pathObject.paths = [pathToEnemyTail, pathToOwnTail]
-  let pathToFood = eat(pathObject, nearestFood);
-
-  // let fillingSpace = fillSpace(pathObject);
-  
-  let nextMove = false;
-
-  // console.log(pathObject.paths);
-
-=======
   
   let pathToFood = eat(pathObject, nearestFood);
   let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
   let nextMove = false;
 
->>>>>>> master
   if (nearestFood && pathToFood) {
     console.log('pathToFood');
     nextMove = pathToFood;
@@ -154,11 +139,8 @@ app.post('/move', (req, res) => {
     nextMove = randomMove(pathObject);
   }
 
-<<<<<<< HEAD
   // console.log(grid);
 
-=======
->>>>>>> master
   const data = {
     move: nextMove
   }
