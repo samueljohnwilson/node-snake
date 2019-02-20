@@ -74,6 +74,7 @@ app.post('/move', (req, res) => {
   const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
   const grid = createGrid(height, width, ourSnake, enemies);
+  console.log(enemies);
   const pathObject = {
     grid: grid,
     start: ourHead,
