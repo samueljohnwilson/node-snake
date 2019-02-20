@@ -120,10 +120,8 @@ app.post('/move', (req, res) => {
   }
 
   if (!nextMove) {
-    nextMove = 'right';
+    nextMove = randomMove(pathObject);
   }
-
-  // console.log(grid);
 
   const data = {
     move: nextMove
