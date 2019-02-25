@@ -7,14 +7,12 @@ const {
   avoidWalls,
   createGrid,
   enemyArray,
-  findEnemyHeads,
   findEnemyTails,
   findKillableSnakes,
   findLowerHealthSnakes,
   findNearestFood,
   findShortSnakes,
   followPath,
-  nextPathExists,
   randomMove,
   snakeArray,
   testPaths,
@@ -38,6 +36,8 @@ const {
 
 const app = express();
 
+let lastTailPosition;
+
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env
 app.set('port', (process.env.PORT || 9001));
@@ -60,6 +60,7 @@ app.post('/start', (req, res) => {
 
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
+  console.log(req.body.turn);
   const { board, you: ourSnake } = req.body;
   const { 
     height,
@@ -75,75 +76,89 @@ app.post('/move', (req, res) => {
   const right = { x: ourHead.x + 1, y: ourHead.y, move: 'right' };
   const up = { x: ourHead.x, y: ourHead.y - 1, move: 'up' };
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
-  const possibleDirections = [left, right, up, down];
+  let possibleDirections = [left, right, up, down];
   avoidObstacles(height, width, allSnakes, possibleDirections);
 
   const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
-  const grid = createGrid(height, width, ourSnake, enemies);
-  console.log(enemies);
+  let grid = createGrid(height, width, ourSnake, enemies);
   const pathObject = {
     grid: grid,
     start: ourHead,
     possibleDirections: possibleDirections,
+    escapes: [],
+    fullPath: [],
+    ourHead: ourHead,
+    ourLength: ourLength,
     ourSnake: ourSnake,
+    ourTail: ourTail,
     enemySnakes: enemies,
     allSnakes: allSnakes,
     height: height,
     width: width
   }
+
+  let pathToOwnTail;
+
+  if (!lastTailPosition) {
+    pathToOwnTail = false;
+  } else {
+    pathToOwnTail = followOwnTail(pathObject, lastTailPosition);
+  }
   
-  let pathToFood = eat(pathObject, nearestFood);
-  let pathToOwnTail = followOwnTail(pathObject, ourTail);
   let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  let nextMove = false;
+  const fillingSpace = fillSpace(pathObject);
+  pathObject.escapes = [ourTail];
+  const enemyTails = findEnemyTails(enemies);
 
-  if (nearestFood && pathToFood) {
-    console.log('pathToFood');
-    nextMove = pathToFood;
-  } 
-  
-  // else if (pathToOwnTail) {
-  //   console.log('pathToOwnTail');
-  //   nextMove = pathToOwnTail;
-  // } else if (pathToEnemyTail) {
-  //   console.log('pathToEnemyTail');
-  //   nextMove = pathToEnemyTail;
-  // } 
-  
-  // else {
-  //   console.log('fillingSpace');
-  //   nextMove = fillingSpace;
-  // }
+  enemyTails.forEach((enemyTail) => {
+    pathObject.escapes.push(enemyTail);
+  });
 
-  // if (!nextMove) {
-  //   pathObject.grid = updateGrid(height, width, ourSnake, enemies);
-  //   pathToFood = eat(pathObject, nearestFood);
-  //   pathToOwnTail = followOwnTail(pathObject, ourTail);
-  //   pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  const pathToFood = eat(pathObject, nearestFood);
 
-  //   if (nearestFood && pathToFood) {
-  //     console.log('newgrid food');
-  //     nextMove = pathToFood;
-  //   } else if (pathToOwnTail) {
-  //     console.log('newgrid ownTail');
-  //     nextMove = pathToOwnTail;
-  //   } else if (pathToEnemyTail) {
-  //     console.log('newgrid enemyTail');
-  //     nextMove = pathToEnemyTail;
-  //   }
-  // }
-
-  if (!nextMove) {
-    // console.log(pathObject.possibleDirections)
-    nextMove = randomMove(pathObject);
+  if (!pathToOwnTail) {
+    possibleDirections = [left, right, up, down];
+    avoidObstacles(height, width, allSnakes, possibleDirections, 1);
+    pathObject.grid = updateGrid(height, width, ourSnake, enemies);
+    pathObject.possibleDirections = possibleDirections;
+    pathObject.target = ourTail;
+    pathToOwnTail = followOwnTail(pathObject, ourTail);
   }
 
-  // console.log(grid);
+  let nextMove = false;
+
+  try {
+    if (nearestFood && pathToFood && ourSnake.health < 90) {
+    console.log('pathToFood');
+    nextMove = pathToFood;
+  } else if (pathToOwnTail) {
+    console.log('pathToOwnTail');
+    nextMove = pathToOwnTail;
+  } else if (pathToEnemyTail) {
+    console.log('pathToEnemyTail');
+    nextMove = pathToEnemyTail;
+  } else if (fillingSpace) {
+    console.log('fillingSpace');
+    nextMove = fillingSpace;
+  } else {
+    console.log('randomMove')
+    nextMove = randomMove(pathObject);
+  }
+} catch(err) {
+  console.error(err)
+  nextMove = randomMove(pathObject);
+}
+
+  if (!nextMove) {
+    nextMove = 'right';
+  }
 
   const data = {
     move: nextMove
   }
+
+  lastTailPosition = ourTail;
 
   console.log('Sending to server: ' + JSON.stringify(data));
 

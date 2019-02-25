@@ -2,16 +2,15 @@ const {
   avoidSnakeBody,
   avoidObstacles,
   avoidWalls,
+  checkForDanger,
   createGrid,
   enemyArray,
-  findEnemyHeads,
   findEnemyTails,
   findKillableSnakes,
   findLowerHealthSnakes,
   findNearestFood,
   findShortSnakes,
   followPath,
-  nextPathExists,
   randomMove,
   snakeArray,
   testPaths,
@@ -19,39 +18,50 @@ const {
 } = require('./helpers.js');
 
 function eat(pathObject, targetFood, distance = 1) {
-  // console.log('eat')
-  if (!targetFood) {
+  console.log('eat')
+  pathObject.start = pathObject.ourHead;
+  pathObject.target = targetFood;
+  const foodIsDangerous = checkForDanger(pathObject, targetFood, distance);
+
+  if (!targetFood || foodIsDangerous) {
     return false;
   }
 
-  let enemies = pathObject.enemySnakes;
+  let direction = followPath(pathObject);
 
-  console.log(enemies)
+  let nextStep = false;
 
-  for (let i = 0; i < enemies.length; i++) {
-    const enemyDistance = Math.abs(enemies[i].body[0].x - targetFood.x) + Math.abs(enemies[i].body[0].y - targetFood.y);
-    const ourDistance = Math.abs(pathObject.ourSnake.body[0].x - targetFood.x) + Math.abs(pathObject.ourSnake.body[0].y - targetFood.y);
-    if (enemies[i].body.length >= pathObject.ourSnake.body.length && enemyDistance === distance && ourDistance === distance) {
-      return false;
+  if (direction && pathObject.ourLength > 2) {
+    const path = pathObject.fullPath;
+    const currentPath = [];
+  
+    for (let i = 0; i < path.length; i++) {
+      currentPath.push({ x: path[i][0], y: path[i][1] });
+    }
+
+    pathObject.start = targetFood;
+    for (let i = 0; i < pathObject.escapes.length; i++) {
+      pathObject.target = pathObject.escapes[i];
+      nextStep = followPath(pathObject, true, currentPath);
+
+      if (nextStep !== false) {
+        break;
+      }
     }
   }
 
-  pathObject.target = targetFood;
-  const direction = followPath(pathObject);
-
-  const isNextPath = nextPathExists(pathObject);
-
-  if (direction && isNextPath) {
+  if (direction && nextStep) {
     return direction.move;
+  } else {
+    return false;
   }
-
-  return false;
 }
 
 function fillSpace(pathObject) {
+  // return 'right'
   const head = pathObject.ourSnake.body[0];
   const grid = pathObject.grid;
-  let shortest = pathObject.width;
+  let longest = 0;
   let coord;
 
   pathObject.possibleDirections.forEach((direction) => {
@@ -67,8 +77,8 @@ function fillSpace(pathObject) {
         }
       }
 
-      if (left < shortest) {
-        shortest = left;
+      if (left > longest) {
+        longest = left;
         coord = { x: (head.x - left), y: head.y };
       }
     }
@@ -85,8 +95,8 @@ function fillSpace(pathObject) {
         }
       }
 
-      if (right < shortest) {
-        shortest = right;
+      if (right > longest) {
+        longest = right;
         coord = { x: (head.x + right - 1), y: head.y };
       }
     }
@@ -103,8 +113,8 @@ function fillSpace(pathObject) {
         }
       }
 
-      if (up < shortest) {
-        shortest = up;
+      if (up > longest) {
+        longest = up;
         coord = { x: head.x, y: (head.y - up)};
       }
     }
@@ -121,51 +131,62 @@ function fillSpace(pathObject) {
         }
       }
 
-      if (down < shortest) {
-        shortest = down;
+      if (down > longest) {
+        longest = down;
         coord = { x: head.x, y: (head.y + down - 1)};
       }
     }
   });
 
-  if (shortest < pathObject.width) {
+  if (longest > 0) {
+    pathObject.start = pathObject.ourSnake.body[0];
     pathObject.target = coord;
+
     const pathArr = [];
     const direction = testPaths(pathObject, pathArr);
     return direction.move;
   }
 }
 
-function followOwnTail(pathObject, ourTail) {
+function followOwnTail(pathObject, target) {
+  console.log('followOwnTail')
   if (pathObject.ourSnake.body.length < 3) {
     return false;
   }
 
   pathObject.start = pathObject.ourSnake.body[0];
-  pathObject.target = ourTail;
+  pathObject.target = target;
 
   const direction = followPath(pathObject);
-  return direction.move;
+
+  if (direction) {
+    return direction.move;
+  } else {
+    return false;
+  }
 }
 
 function followEnemyTail(pathObject, enemies) {
-  // console.log('followEnemyTail')
+  console.log('followEnemyTail')
   const enemyTails = findEnemyTails(enemies);
+  let move = false;
+
   if (enemyTails.length) {
     for (let i = 0; i < enemyTails.length; i++) {
       pathObject.target = enemyTails[i];
       const direction = followPath(pathObject);
+
       if (direction) {
-        return direction.move;
+        move = direction.move;
       }
     }
   }
 
-  return false;
+  return move;
 }
 
 function kill(pathObject, ourLength, enemies) {
-  // console.log('kill')
+  console.log('kill')
   const shortSnakes = findShortSnakes(pathObject, enemies);
   const closestKillableSnake = findKillableSnakes(pathObject, shortSnakes);
 

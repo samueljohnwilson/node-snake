@@ -9,7 +9,7 @@ const poweredByHandler = (req, res, next) => {
 }
 
 const fallbackHandler = (req, res, next) => {
-  console.dir(req.baseUrl)
+  // console.dir(req.baseUrl)
   // Root URL path
   if (req.baseUrl === '') {
     res.status(200)
