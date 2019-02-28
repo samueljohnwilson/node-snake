@@ -37,6 +37,7 @@ const {
 const app = express();
 
 let lastTailPosition;
+let eatenFood;
 
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env
@@ -101,7 +102,8 @@ app.post('/move', (req, res) => {
   }
 
   let pathToOwnTail;
-  let justAte = eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
+  
+  const justAte = eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
 
   if (req.body.turn < 3 || !lastTailPosition) {
     pathToOwnTail = false;
