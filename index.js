@@ -138,7 +138,7 @@ app.post('/move', (req, res) => {
   // Behaviour tree goes below here
 
   try {
-    if (nearestFood && pathToFood && ourSnake.health < 90) {
+    if (ourLength < 8 || nearestFood && pathToFood && ourSnake.health < 90) {
     console.log('pathToFood');
     nextMove = pathToFood;
   } else if (pathToOwnTail) {
