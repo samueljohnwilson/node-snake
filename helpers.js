@@ -96,7 +96,7 @@ function createGrid(height, width, ourSnake, enemySnakes) {
   for (row in gridRows) {
     grid.push(gridRows[row]);
   }
-
+  
   return grid;
 }
 
