@@ -18,7 +18,7 @@ const {
 } = require('./helpers.js');
 
 function eat(pathObject, targetFood, distance = 1) {
-  console.log('eat')
+  // console.log('eat')
   pathObject.start = pathObject.ourHead;
   pathObject.target = targetFood;
   const foodIsDangerous = checkForDanger(pathObject, targetFood, distance);
@@ -149,8 +149,7 @@ function fillSpace(pathObject) {
 }
 
 function followOwnTail(pathObject, target) {
-  console.log('followOwnTail')
-  if (pathObject.ourSnake.body.length < 3) {
+  if (pathObject.turn < 3) {
     return false;
   }
 
@@ -167,7 +166,6 @@ function followOwnTail(pathObject, target) {
 }
 
 function followEnemyTail(pathObject, enemies) {
-  console.log('followEnemyTail')
   const enemyTails = findEnemyTails(enemies);
   let move = false;
 
@@ -186,13 +184,11 @@ function followEnemyTail(pathObject, enemies) {
 }
 
 function kill(pathObject, ourLength, enemies) {
-  console.log('kill')
   const shortSnakes = findShortSnakes(pathObject, enemies);
   const closestKillableSnake = findKillableSnakes(pathObject, shortSnakes);
 
   if (closestKillableSnake) {
     const aggression = ourLength - closestKillableSnake.body.length;
-    console.log(closestKillableSnake)
 
     if (Math.abs(closestKillableSnake.body[0].x) < aggression && Math.abs(closestKillableSnake.body[0].y) < aggression) {
       pathObject.target = closestKillableSnake.body[0];

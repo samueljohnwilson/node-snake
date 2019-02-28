@@ -49,7 +49,7 @@ app.use(poweredByHandler);
 // Handle POST request to '/start'
 app.post('/start', (req, res) => {
 
-  console.log('Yaaaasssssssss');
+  // console.log('Yaaaasssssssss');
 
   const data = {
     color: '#770001'
@@ -60,7 +60,7 @@ app.post('/start', (req, res) => {
 
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
-  console.log(req.body.turn);
+  // console.log(req.body.turn);
   const { board, you: ourSnake } = req.body;
   const { 
     height,
@@ -83,50 +83,59 @@ app.post('/move', (req, res) => {
   const enemies = enemyArray(allSnakes, ourSnake);
   let grid = createGrid(height, width, ourSnake, enemies);
   const pathObject = {
-    grid: grid,
-    start: ourHead,
-    possibleDirections: possibleDirections,
+    allDirections: [left, right, up, down],
+    allSnakes: allSnakes,
+    enemySnakes: enemies,
     escapes: [],
     fullPath: [],
+    grid: grid,
+    height: height,
     ourHead: ourHead,
     ourLength: ourLength,
     ourSnake: ourSnake,
     ourTail: ourTail,
-    enemySnakes: enemies,
-    allSnakes: allSnakes,
-    height: height,
+    possibleDirections: possibleDirections,
+    start: ourHead,
+    turn: req.body.turn,
     width: width
   }
 
   let pathToOwnTail;
+  let eatenFood;
 
-  if (!lastTailPosition) {
+  if (req.body.turn < 3 || !lastTailPosition) {
+    pathToOwnTail = false;
+  } else if (eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y){
     pathToOwnTail = false;
   } else {
     pathToOwnTail = followOwnTail(pathObject, lastTailPosition);
   }
-  
-  let pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  const fillingSpace = fillSpace(pathObject);
-  pathObject.escapes = [ourTail];
-  const enemyTails = findEnemyTails(enemies);
 
+  const enemyTails = findEnemyTails(enemies);
+  const pathToEnemyTail = followEnemyTail(pathObject, enemies);
+  const fillingSpace = fillSpace(pathObject);
+
+  pathObject.escapes = [ourTail];
   enemyTails.forEach((enemyTail) => {
     pathObject.escapes.push(enemyTail);
   });
 
   const pathToFood = eat(pathObject, nearestFood);
 
-  if (!pathToOwnTail) {
-    possibleDirections = [left, right, up, down];
-    avoidObstacles(height, width, allSnakes, possibleDirections, 1);
+  if (!pathToOwnTail && req.body.turn > 3) {
+
     pathObject.grid = updateGrid(height, width, ourSnake, enemies);
-    pathObject.possibleDirections = possibleDirections;
+
     pathObject.target = ourTail;
     pathToOwnTail = followOwnTail(pathObject, ourTail);
   }
 
+  lastTailPosition = ourTail;
+  eatenFood = nearestFood;
+
   let nextMove = false;
+
+  // Behaviour tree goes below here
 
   try {
     if (nearestFood && pathToFood && ourSnake.health < 90) {
@@ -158,8 +167,6 @@ app.post('/move', (req, res) => {
     move: nextMove
   }
 
-  lastTailPosition = ourTail;
-
   console.log('Sending to server: ' + JSON.stringify(data));
 
   return res.json(data);
@@ -183,5 +190,5 @@ app.use(notFoundHandler)
 app.use(genericErrorHandler)
 
 app.listen(app.get('port'), () => {
-  console.log('Server listening on port %s', app.get('port'))
+  // // console.log('Server listening on port %s', app.get('port'))
 })
