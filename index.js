@@ -125,9 +125,6 @@ app.post('/move', (req, res) => {
   const pathToFood = eat(pathObject, nearestFood);
 
   if (!pathToOwnTail && req.body.turn > 3 && !justAte) {
-
-    pathObject.grid = updateGrid(height, width, ourSnake, enemies);
-
     pathObject.target = ourTail;
     pathToOwnTail = followOwnTail(pathObject, ourTail);
   }
