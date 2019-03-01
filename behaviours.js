@@ -147,6 +147,29 @@ function fillSpace(pathObject) {
   }
 }
 
+function floodFill(grid, current, queue, pathObject) {
+  queue.push(current);
+  grid[current.y][current.x] = 1;
+
+    if (current.x - 1 >= 0 && grid[current.y][current.x - 1] === 0) {
+      floodFill(grid, { x: current.x - 1, y: current.y }, queue, pathObject);
+    }
+
+    if (current.x + 1 < pathObject.width && grid[current.y][current.x + 1] === 0) {
+      floodFill(grid, { x: current.x + 1, y: current.y }, queue, pathObject);
+    }
+
+    if (current.y - 1 >= 0 && grid[current.y - 1][current.x] === 0) {
+      floodFill(grid, { x: current.x, y: current.y - 1 }, queue, pathObject);
+    }
+
+    if (current.y + 1 < pathObject.height && grid[current.y + 1][current.x] === 0) {
+      floodFill(grid, { x: current.x, y: current.y + 1 }, queue, pathObject);
+    }
+
+  return
+}
+
 function followOwnTail(pathObject, target) {
   if (pathObject.turn < 3 || checkForDanger(pathObject, target)) {
     return false;
@@ -202,6 +225,7 @@ function kill(pathObject, ourLength, enemies) {
 module.exports = {
   eat,
   fillSpace,
+  floodFill,
   followEnemyTail,
   followOwnTail,
   kill

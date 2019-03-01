@@ -24,6 +24,7 @@ const {
   fillSpace,
   followEnemyTail,
   followOwnTail,
+  floodFill,
   kill
 } = require('./behaviours.js');
 
@@ -61,7 +62,7 @@ app.post('/start', (req, res) => {
 
 // Handle POST request to '/move'
 app.post('/move', (req, res) => {
-  // console.log(req.body.turn);
+  console.log(req.body.turn);
   const { board, you: ourSnake } = req.body;
   const { 
     height,
@@ -103,17 +104,15 @@ app.post('/move', (req, res) => {
 
   const justAte = eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
   let pathToOwnTail;
-  // let tailIsSafe = false;
-  // let headNearby = false;
+  let dangerousPathToOwnTail;
+  let weAreLongest = true;
 
-  // enemySnakes.forEach((snake) => {
-  //   const head = snake.body[0];
-  //   possibleDirections.forEach((direction) => {
-  //     if (head.x === direction.x && head.y === direction.y) {
-  //       headNearby = true;
-  //     }
-  //   });
-  // });
+  enemies.forEach((snake) => {
+    const enemyLength = snake.body.length;
+    if (ourLength <= enemyLength) {
+      weAreLongest = false;
+    }
+  });
 
   if (req.body.turn < 3 || !lastTailPosition || justAte) {
     pathToOwnTail = false;
@@ -123,7 +122,6 @@ app.post('/move', (req, res) => {
 
   const enemyTails = findEnemyTails(enemies);
   const pathToEnemyTail = followEnemyTail(pathObject, enemies);
-  const fillingSpace = fillSpace(pathObject);
 
   pathObject.escapes = [ourTail];
   enemyTails.forEach((enemyTail) => {
@@ -134,18 +132,30 @@ app.post('/move', (req, res) => {
 
   if (!pathToOwnTail && req.body.turn > 3 && !justAte) {
     pathObject.target = ourTail;
-    pathToOwnTail = followOwnTail(pathObject, ourTail);
+    dangerousPathToOwnTail = followOwnTail(pathObject, ourTail);
   }
 
   lastTailPosition = ourTail;
   eatenFood = nearestFood;
+
+  let floodPath = false;
+  const queue = [];
+  floodFill(grid, ourHead, queue, pathObject);
+
+  possibleDirections.forEach((direction) => {
+    if (queue[1].x === direction.x && queue[1].y === direction.y) {
+      floodPath = direction.move;
+    }
+  });
+
+  // console.log(queue);
 
   let nextMove = false;
 
   // Behaviour tree goes below here
 
   try {
-    if (nearestFood && pathToFood && ourSnake.health < 90 && ourLength > 6 || nearestFood && pathToFood && ourLength <= 6) {
+    if (nearestFood && pathToFood && ourSnake.health < 90 || nearestFood && pathToFood && !weAreLongest) {
     console.log('pathToFood');
     nextMove = pathToFood;
   } else if (pathToOwnTail) {
@@ -154,9 +164,12 @@ app.post('/move', (req, res) => {
   } else if (pathToEnemyTail) {
     console.log('pathToEnemyTail');
     nextMove = pathToEnemyTail;
-  } else if (fillingSpace) {
-    console.log('fillingSpace');
-    nextMove = fillingSpace;
+  } else if (dangerousPathToOwnTail) {
+    console.log('dangerTail');
+    nextMove = dangerousPathToOwnTail;
+  } else if (floodPath) {
+    console.log('floodPath');
+    nextMove = floodPath;
   } else {
     console.log('randomMove')
     nextMove = randomMove(pathObject);
