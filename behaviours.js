@@ -1,3 +1,5 @@
+const PF = require("pathfinding");
+
 const {
   avoidSnakeBody,
   avoidObstacles,
@@ -15,45 +17,51 @@ const {
   snakeArray,
   testPaths,
   updateGrid
-} = require('./helpers.js');
+} = require("./helpers.js");
 
 function eat(pathObject, targetFood, distance = 1) {
-  // console.log('eat')
-  pathObject.start = pathObject.ourHead;
-  pathObject.target = targetFood;
-  const foodIsDangerous = checkForDanger(pathObject, targetFood, distance);
+  try {
+    pathObject.start = pathObject.ourHead;
+    pathObject.target = targetFood;
+    const foodIsDangerous = checkForDanger(pathObject, targetFood, distance);
 
-  if (!targetFood || foodIsDangerous) {
-    return false;
-  }
-
-  let direction = followPath(pathObject);
-
-  let nextStep = false;
-
-  if (direction && pathObject.ourLength > 2) {
-    const path = pathObject.fullPath;
-    const currentPath = [];
-  
-    for (let i = 0; i < path.length; i++) {
-      currentPath.push({ x: path[i][0], y: path[i][1] });
+    if (!targetFood || foodIsDangerous) {
+      return false;
     }
+    console.log("in eat", pathObject);
+    let direction = followPath(pathObject);
+    return direction;
+    console.log("direction in eat", direction);
 
-    pathObject.start = targetFood;
-    for (let i = 0; i < pathObject.escapes.length; i++) {
-      pathObject.target = pathObject.escapes[i];
-      nextStep = followPath(pathObject, true, currentPath);
+    let nextStep = false;
 
-      if (nextStep !== false) {
-        break;
+    if (direction && pathObject.ourLength > 2) {
+      const path = pathObject.fullPath;
+      const currentPath = [];
+
+      for (let i = 0; i < path.length; i++) {
+        currentPath.push({ x: path[i][0], y: path[i][1] });
+      }
+
+      pathObject.start = targetFood;
+      for (let i = 0; i < pathObject.escapes.length; i++) {
+        pathObject.target = pathObject.escapes[i];
+        nextStep = followPath(pathObject, true, currentPath);
+
+        if (nextStep !== false) {
+          break;
+        }
       }
     }
-  }
 
-  if (direction && nextStep) {
-    return direction.move;
-  } else {
-    return false;
+    if (direction && nextStep) {
+      return direction.move;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
+    return;
   }
 }
 
@@ -64,8 +72,8 @@ function fillSpace(pathObject) {
   let longest = 0;
   let coord;
 
-  pathObject.possibleDirections.forEach((direction) => {
-    if (direction.move === 'left') {
+  pathObject.possibleDirections.forEach(direction => {
+    if (direction.move === "left") {
       let left = 0;
       for (let i = head.x; i > 0; i--) {
         if (grid[head.y][i] === 0) {
@@ -79,11 +87,11 @@ function fillSpace(pathObject) {
 
       if (left > longest) {
         longest = left;
-        coord = { x: (head.x - left), y: head.y };
+        coord = { x: head.x - left, y: head.y };
       }
     }
 
-    if (direction.move === 'right') {
+    if (direction.move === "right") {
       let right = 0;
       for (let i = head.x; i < pathObject.width; i++) {
         if (grid[head.y][i] === 0) {
@@ -97,11 +105,11 @@ function fillSpace(pathObject) {
 
       if (right > longest) {
         longest = right;
-        coord = { x: (head.x + right - 1), y: head.y };
+        coord = { x: head.x + right - 1, y: head.y };
       }
     }
 
-    if (direction.move === 'up') {
+    if (direction.move === "up") {
       let up = 0;
       for (let i = head.y; i > 0; i--) {
         if (grid[i][head.x] === 0) {
@@ -115,11 +123,11 @@ function fillSpace(pathObject) {
 
       if (up > longest) {
         longest = up;
-        coord = { x: head.x, y: (head.y - up)};
+        coord = { x: head.x, y: head.y - up };
       }
     }
 
-    if (direction.move === 'down') {
+    if (direction.move === "down") {
       let down = 0;
       for (let i = head.y; i < pathObject.height; i++) {
         if (grid[i][head.x] === 0) {
@@ -133,7 +141,7 @@ function fillSpace(pathObject) {
 
       if (down > longest) {
         longest = down;
-        coord = { x: head.x, y: (head.y + down - 1)};
+        coord = { x: head.x, y: head.y + down - 1 };
       }
     }
   });
@@ -149,18 +157,25 @@ function fillSpace(pathObject) {
 }
 
 function followOwnTail(pathObject, target) {
-  if (pathObject.turn < 3) {
-    return false;
-  }
+  console.log("in follow own tail");
+  try {
+    //   if (pathObject.turn < 3 || checkForDanger(pathObject, target)) {
+    //     return false;
+    //   }
+    //   console.log("past danger");
+    pathObject.start = pathObject.ourSnake.body[0];
+    target.x + 1;
+    pathObject.target = target;
 
-  pathObject.start = pathObject.ourSnake.body[0];
-  pathObject.target = target;
+    const direction = followPath(pathObject);
 
-  const direction = followPath(pathObject);
-
-  if (direction) {
-    return direction.move;
-  } else {
+    if (direction) {
+      return direction;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
     return false;
   }
 }
@@ -190,7 +205,10 @@ function kill(pathObject, ourLength, enemies) {
   if (closestKillableSnake) {
     const aggression = ourLength - closestKillableSnake.body.length;
 
-    if (Math.abs(closestKillableSnake.body[0].x) < aggression && Math.abs(closestKillableSnake.body[0].y) < aggression) {
+    if (
+      Math.abs(closestKillableSnake.body[0].x) < aggression &&
+      Math.abs(closestKillableSnake.body[0].y) < aggression
+    ) {
       pathObject.target = closestKillableSnake.body[0];
       const direction = followPath(pathObject);
       return direction.move;
@@ -206,4 +224,4 @@ module.exports = {
   followEnemyTail,
   followOwnTail,
   kill
-}
+};
