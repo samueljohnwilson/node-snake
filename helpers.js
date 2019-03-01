@@ -1,13 +1,13 @@
 const Pathfinder = require('pathfinding');
 
-function avoidSnakeBody(allSnakes, possibleDirections, difference = 0) {
+function avoidSnakeBody(allSnakes, possibleDirections) {
   // console.log('avoidSnakeBody')
   allSnakes.forEach((snake) => {
     possibleDirections.forEach((direction) => {
-      for (let i = 0; i < snake.body.length - difference; i++) {
+      for (let i = 0; i < snake.body.length - 1; i++) {
         if (direction.x === snake.body[i].x && direction.y === snake.body[i].y) {
           removeDirection(possibleDirections, direction);
-          avoidSnakeBody(allSnakes, possibleDirections, difference);
+          avoidSnakeBody(allSnakes, possibleDirections);
         }
       }
     });
@@ -24,12 +24,12 @@ function avoidWalls(height, width, possibleDirections) {
   });
 }
 
-function avoidObstacles(height, width, allSnakes, possibleDirections, difference = 0) {
-  avoidSnakeBody(allSnakes, possibleDirections, difference);
+function avoidObstacles(height, width, allSnakes, possibleDirections) {
+  avoidSnakeBody(allSnakes, possibleDirections);
   avoidWalls(height, width, possibleDirections);
 }
 
-function checkForDanger(pathObject, targetFood, distance) {
+function checkForDanger(pathObject, targetFood, distance = 1) {
   let enemies = pathObject.enemySnakes;
   let danger = false;
 
@@ -96,7 +96,7 @@ function createGrid(height, width, ourSnake, enemySnakes) {
   for (row in gridRows) {
     grid.push(gridRows[row]);
   }
-  
+
   return grid;
 }
 

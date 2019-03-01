@@ -101,13 +101,21 @@ app.post('/move', (req, res) => {
     width: width
   }
 
-  let pathToOwnTail;
-  
   const justAte = eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
+  let pathToOwnTail;
+  // let tailIsSafe = false;
+  // let headNearby = false;
 
-  if (req.body.turn < 3 || !lastTailPosition) {
-    pathToOwnTail = false;
-  } else if (justAte){
+  // enemySnakes.forEach((snake) => {
+  //   const head = snake.body[0];
+  //   possibleDirections.forEach((direction) => {
+  //     if (head.x === direction.x && head.y === direction.y) {
+  //       headNearby = true;
+  //     }
+  //   });
+  // });
+
+  if (req.body.turn < 3 || !lastTailPosition || justAte) {
     pathToOwnTail = false;
   } else {
     pathToOwnTail = followOwnTail(pathObject, lastTailPosition);

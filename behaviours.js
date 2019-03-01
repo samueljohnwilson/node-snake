@@ -28,7 +28,6 @@ function eat(pathObject, targetFood, distance = 1) {
   }
 
   let direction = followPath(pathObject);
-
   let nextStep = false;
 
   if (direction && pathObject.ourLength > 2) {
@@ -149,7 +148,7 @@ function fillSpace(pathObject) {
 }
 
 function followOwnTail(pathObject, target) {
-  if (pathObject.turn < 3) {
+  if (pathObject.turn < 3 || checkForDanger(pathObject, target)) {
     return false;
   }
 
