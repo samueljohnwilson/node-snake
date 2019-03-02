@@ -236,17 +236,17 @@ function followPath(pathObject, nextPath = false, blocked = []) {
     pathObject.grid.forEach((row, y) => {
       row.forEach((node, x) => {
         if (node === 2) {
-          grid.setWeightAt(x, y, 1.6);
+          grid.setWeightAt(x, y, 16);
           console.log(grid.nodes[y][x]);
         }
       });
     });
 
     for (let i = 0; i < pathObject.height; i++) {
-      grid.setWeightAt(0, i, 1.1);
-      grid.setWeightAt(i, 0, 1.1);
-      grid.setWeightAt(pathObject.height - 1, 0, 1.1);
-      grid.setWeightAt(0, pathObject.height - 1, 1.1);
+      grid.setWeightAt(0, i, 8);
+      grid.setWeightAt(i, 0, 8);
+      grid.setWeightAt(pathObject.height - 1, 0, 8);
+      grid.setWeightAt(0, pathObject.height - 1, 8);
     }
 
     console.log(JSON.stringify(grid));
