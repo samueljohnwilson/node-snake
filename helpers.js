@@ -171,19 +171,19 @@ function createGrid(height, width, ourSnake, enemySnakes) {
 
           if (index === 0 && snake.body.length >= ourSnake.body.length) {
             if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
-              gridRows[segment.y - 1][segment.x] = 1;
+              gridRows[segment.y - 1][segment.x] = 2;
             }
 
             if (segment.y + 1 <= height - 1 && gridRows[segment.y + 1][segment.x] === 0) {
-              gridRows[segment.y + 1][segment.x] = 1;
+              gridRows[segment.y + 1][segment.x] = 2;
             }
 
             if (segment.x - 1 >= 0 && gridRows[segment.y][segment.x - 1] === 0) {
-              gridRows[segment.y][segment.x - 1] = 1
+              gridRows[segment.y][segment.x - 1] = 2;
             }
 
             if (segment.x + 1 <= width - 1 && gridRows[segment.y][segment.x + 1] === 0) {
-              gridRows[segment.y][segment.x + 1] = 1;
+              gridRows[segment.y][segment.x + 1] = 2;
             }
           }
         });
@@ -299,6 +299,18 @@ function findShortSnakes(pathObject, snakes) {
 function followPath(pathObject, nextPath = false, blocked = []) {
   let grid = new Pathfinder.Grid(pathObject.grid);
   let finder = new Pathfinder.AStarFinder();
+
+  pathObject.grid.forEach((row, y) => {
+    row.forEach((node, x) => {
+      if (node === 2) {
+        
+        grid.setWeightAt(x, y, 100)
+        console.log(grid.nodes[y][x])
+      }
+    });
+  });
+
+  // console.log(JSON.stringify(grid))
 
   if (blocked && blocked.length) {
     blocked.forEach((space) => {
