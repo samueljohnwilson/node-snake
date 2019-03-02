@@ -103,8 +103,8 @@ app.post('/move', (req, res) => {
   }
 
   const justAte = eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
-  let pathToOwnTail;
-  let dangerousPathToOwnTail;
+  let pathToOwnTail = false;
+  let dangerousPathToOwnTail = false;
   let weAreLongest = true;
 
   enemies.forEach((snake) => {
@@ -130,7 +130,7 @@ app.post('/move', (req, res) => {
 
   const pathToFood = eat(pathObject, nearestFood);
 
-  if (!pathToOwnTail && req.body.turn > 3 && !justAte) {
+  if (req.body.turn > 3 && !justAte) {
     pathObject.target = ourTail;
     dangerousPathToOwnTail = followOwnTail(pathObject, ourTail);
   }
@@ -143,7 +143,7 @@ app.post('/move', (req, res) => {
   floodFill(grid, ourHead, queue, pathObject);
 
   possibleDirections.forEach((direction) => {
-    if (queue[1].x === direction.x && queue[1].y === direction.y) {
+    if (queue.length > 1 && queue[1].x === direction.x && queue[1].y === direction.y) {
       floodPath = direction.move;
     }
   });
@@ -154,24 +154,36 @@ app.post('/move', (req, res) => {
 
   // Behaviour tree goes below here
 
+  console.log(`pathToOwnFood: ${pathToFood}`)
+  console.log(`pathToOwnTail: ${pathToOwnTail}`)
+  console.log(`pathToEnemyTail: ${pathToEnemyTail}`)
+  console.log(`dangerousPathToTail: ${dangerousPathToOwnTail}`)
+  console.log(`floodPath: ${floodPath}`)
+
   try {
     if (nearestFood && pathToFood && ourSnake.health < 90 || nearestFood && pathToFood && !weAreLongest) {
     console.log('pathToFood');
+    
     nextMove = pathToFood;
   } else if (pathToOwnTail) {
     console.log('pathToOwnTail');
+    
     nextMove = pathToOwnTail;
   } else if (pathToEnemyTail) {
     console.log('pathToEnemyTail');
+    
     nextMove = pathToEnemyTail;
   } else if (dangerousPathToOwnTail) {
     console.log('dangerTail');
+    
     nextMove = dangerousPathToOwnTail;
   } else if (floodPath) {
     console.log('floodPath');
+    
     nextMove = floodPath;
   } else {
     console.log('randomMove')
+    console.log(floodPath)
     nextMove = randomMove(pathObject);
   }
 } catch(err) {
@@ -187,7 +199,7 @@ app.post('/move', (req, res) => {
     move: nextMove
   }
 
-  console.log('Sending to server: ' + JSON.stringify(data));
+  // console.log('Sending to server: ' + JSON.stringify(data));
 
   return res.json(data);
 });
