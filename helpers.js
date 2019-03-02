@@ -229,29 +229,6 @@ function findShortSnakes(pathObject, snakes) {
 }
 
 function followPath(pathObject, nextPath = false, blocked = []) {
-<<<<<<< HEAD
-  let grid = new Pathfinder.Grid(pathObject.grid);
-  let finder = new Pathfinder.AStarFinder();
-
-  pathObject.grid.forEach((row, y) => {
-    row.forEach((node, x) => {
-      if (node === 2) {
-        
-        grid.setWeightAt(x, y, 8)
-        console.log(grid.nodes[y][x])
-      }
-    });
-  });
-
-  for (let i = 0; i < pathObject.height; i++) {
-    grid.setWeightAt(0, i, 8);
-    grid.setWeightAt(i, 0, 8);
-    grid.setWeightAt(pathObject.height - 1, 0, 2);
-    grid.setWeightAt(0, pathObject.height - 1, 2);
-  }
-
-  // console.log(JSON.stringify(grid))
-=======
   try {
     let grid = new Pathfinder.Grid(pathObject.grid);
     let finder = new Pathfinder.AStarFinder();
@@ -264,7 +241,6 @@ function followPath(pathObject, nextPath = false, blocked = []) {
         }
       });
     });
->>>>>>> 975681706c3ed3afc5a6924950e891692b128048
 
     for (let i = 0; i < pathObject.height; i++) {
       grid.setWeightAt(0, i, 8);
