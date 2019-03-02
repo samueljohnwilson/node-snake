@@ -1,11 +1,14 @@
-const Pathfinder = require('pathfinding');
+const Pathfinder = require("pathfinding");
 
 function avoidSnakeBody(allSnakes, possibleDirections) {
   // console.log('avoidSnakeBody')
-  allSnakes.forEach((snake) => {
-    possibleDirections.forEach((direction) => {
+  allSnakes.forEach(snake => {
+    possibleDirections.forEach(direction => {
       for (let i = 0; i < snake.body.length - 1; i++) {
-        if (direction.x === snake.body[i].x && direction.y === snake.body[i].y) {
+        if (
+          direction.x === snake.body[i].x &&
+          direction.y === snake.body[i].y
+        ) {
           removeDirection(possibleDirections, direction);
           avoidSnakeBody(allSnakes, possibleDirections);
         }
@@ -16,8 +19,13 @@ function avoidSnakeBody(allSnakes, possibleDirections) {
 
 function avoidWalls(height, width, possibleDirections) {
   // console.log('avoidWalls')
-  possibleDirections.forEach((direction) => {
-    if (direction.x < 0 || direction.x === width || direction.y < 0 || direction.y === height) {
+  possibleDirections.forEach(direction => {
+    if (
+      direction.x < 0 ||
+      direction.x === width ||
+      direction.y < 0 ||
+      direction.y === height
+    ) {
       removeDirection(possibleDirections, direction);
       avoidWalls(height, width, possibleDirections);
     }
@@ -34,9 +42,17 @@ function checkForDanger(pathObject, targetFood, distance = 1) {
   let danger = false;
 
   for (let i = 0; i < enemies.length; i++) {
-    const enemyDistance = Math.abs(enemies[i].body[0].x - targetFood.x) + Math.abs(enemies[i].body[0].y - targetFood.y);
-    const ourDistance = Math.abs(pathObject.ourSnake.body[0].x - targetFood.x) + Math.abs(pathObject.ourSnake.body[0].y - targetFood.y);
-    if (enemies[i].body.length >= pathObject.ourSnake.body.length && enemyDistance <= ourDistance && enemyDistance <= distance) {
+    const enemyDistance =
+      Math.abs(enemies[i].body[0].x - targetFood.x) +
+      Math.abs(enemies[i].body[0].y - targetFood.y);
+    const ourDistance =
+      Math.abs(pathObject.ourSnake.body[0].x - targetFood.x) +
+      Math.abs(pathObject.ourSnake.body[0].y - targetFood.y);
+    if (
+      enemies[i].body.length >= pathObject.ourSnake.body.length &&
+      enemyDistance <= ourDistance &&
+      enemyDistance <= distance
+    ) {
       danger = true;
     }
   }
@@ -60,36 +76,48 @@ function createGrid(height, width, ourSnake, enemySnakes) {
   }
 
   for (let i = 1; i < ourSnake.body.length; i++) {
-    gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1
+    gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1;
   }
 
   if (enemySnakes.length) {
-    enemySnakes.forEach((snake) => {
+    enemySnakes.forEach(snake => {
       if (snake.id !== ourSnake.id) {
         snake.body.forEach((segment, index) => {
           gridRows[segment.y][segment.x] = 1;
 
           if (index === 0 && snake.body.length >= ourSnake.body.length) {
-            if (segment.y - 1 >= 0 && gridRows[segment.y - 1][segment.x] === 0) {
+            if (
+              segment.y - 1 >= 0 &&
+              gridRows[segment.y - 1][segment.x] === 0
+            ) {
               gridRows[segment.y - 1][segment.x] = 2;
             }
 
-            if (segment.y + 1 <= height - 1 && gridRows[segment.y + 1][segment.x] === 0) {
+            if (
+              segment.y + 1 <= height - 1 &&
+              gridRows[segment.y + 1][segment.x] === 0
+            ) {
               gridRows[segment.y + 1][segment.x] = 2;
             }
 
-            if (segment.x - 1 >= 0 && gridRows[segment.y][segment.x - 1] === 0) {
+            if (
+              segment.x - 1 >= 0 &&
+              gridRows[segment.y][segment.x - 1] === 0
+            ) {
               gridRows[segment.y][segment.x - 1] = 2;
             }
 
-            if (segment.x + 1 <= width - 1 && gridRows[segment.y][segment.x + 1] === 0) {
+            if (
+              segment.x + 1 <= width - 1 &&
+              gridRows[segment.y][segment.x + 1] === 0
+            ) {
               gridRows[segment.y][segment.x + 1] = 2;
             }
           }
         });
       }
     });
-  };
+  }
 
   gridRows[ourSnake.body[0].y][ourSnake.body[0].x] = 0;
 
@@ -103,7 +131,7 @@ function createGrid(height, width, ourSnake, enemySnakes) {
 function enemyArray(snakes, ourSnake) {
   // console.log('enemyArray')
   const enemies = [];
-  snakes.forEach((snake) => {
+  snakes.forEach(snake => {
     if (snake.id !== ourSnake.id) {
       enemies.push(snake);
     }
@@ -115,7 +143,7 @@ function enemyArray(snakes, ourSnake) {
 function findEnemyTails(snakes) {
   // console.log('findEnemyTails')
   const tails = [];
-  snakes.forEach((snake) => {
+  snakes.forEach(snake => {
     const snakeTails = {};
     snakeTails.x = snake.body[snake.body.length - 1].x;
     snakeTails.y = snake.body[snake.body.length - 1].y;
@@ -130,7 +158,7 @@ function findKillableSnakes(pathObject, shortSnakes) {
   if (shortSnakes.length) {
     let closestKillableDistance = 0;
 
-    shortSnakes.forEach((shorty) => {
+    shortSnakes.forEach(shorty => {
       const xDistance = pathObject.ourSnake.body[0].x - shorty.body[0].x;
       const yDistance = pathObject.ourSnake.body[0].y - shorty.body[0].y;
 
@@ -151,10 +179,12 @@ function findKillableSnakes(pathObject, shortSnakes) {
 function findLowerHealthSnakes(ourSnake, snakes) {
   // console.log('findLowerHealthSnakes')
   const lowHealthSnakes = [];
-  snakes.forEach((snake) => {
-    if (snake.health < ourSnake.health) {{
-      lowHealthSnakes.push(snake);
-    }}
+  snakes.forEach(snake => {
+    if (snake.health < ourSnake.health) {
+      {
+        lowHealthSnakes.push(snake);
+      }
+    }
   });
 
   return lowHealthSnakes;
@@ -165,11 +195,13 @@ function findNearestFood(ourHead, food) {
   if (food.length) {
     let nearestFood = food[0];
 
-    food.forEach((portion) => {
+    food.forEach(portion => {
       const xDistance = Math.abs(portion.x - ourHead.x);
       const yDistance = Math.abs(portion.y - ourHead.y);
       const totalDistance = xDistance + yDistance;
-      const currentNearest = Math.abs(nearestFood.x - ourHead.x) + Math.abs(nearestFood.y - ourHead.y);
+      const currentNearest =
+        Math.abs(nearestFood.x - ourHead.x) +
+        Math.abs(nearestFood.y - ourHead.y);
 
       if (totalDistance < currentNearest) {
         nearestFood = portion;
@@ -187,7 +219,7 @@ function findShortSnakes(pathObject, snakes) {
   // console.log('findShortestSnake');
   const shortSnakes = [];
 
-  snakes.forEach((snake) => {
+  snakes.forEach(snake => {
     if (pathObject.ourSnake.body.length > snake.body.length) {
       shortSnakes.push(snake);
     }
@@ -197,54 +229,72 @@ function findShortSnakes(pathObject, snakes) {
 }
 
 function followPath(pathObject, nextPath = false, blocked = []) {
-  let grid = new Pathfinder.Grid(pathObject.grid);
-  let finder = new Pathfinder.AStarFinder();
+  try {
+    let grid = new Pathfinder.Grid(pathObject.grid);
+    let finder = new Pathfinder.AStarFinder();
 
-  pathObject.grid.forEach((row, y) => {
-    row.forEach((node, x) => {
-      if (node === 2) {
-        
-        grid.setWeightAt(x, y, 100)
-        console.log(grid.nodes[y][x])
-      }
+    pathObject.grid.forEach((row, y) => {
+      row.forEach((node, x) => {
+        if (node === 2) {
+          grid.setWeightAt(x, y, 1.6);
+          console.log(grid.nodes[y][x]);
+        }
+      });
     });
-  });
 
-  // console.log(JSON.stringify(grid))
-
-  if (blocked && blocked.length) {
-    blocked.forEach((space) => {
-      grid.setWalkableAt(space.x, space.y, false);
-    });
-  }
-
-  grid.setWalkableAt(pathObject.start.x, pathObject.start.y, true);
-  grid.setWalkableAt(pathObject.target.x, pathObject.target.y, true);
-
-  const path = finder.findPath(pathObject.start.x, pathObject.start.y, pathObject.target.x, pathObject.target.y, grid);
-  let move = false;
-
-  if (path && path.length > 1 && !nextPath) {
-    for (let i = 0; i < pathObject.allDirections.length; i++) {
-      if (path[1][0] === pathObject.allDirections[i].x && path[1][1] === pathObject.allDirections[i].y) {
-        pathObject.fullPath = path;
-        move = pathObject.allDirections[i];
-      }
+    for (let i = 0; i < pathObject.height; i++) {
+      grid.setWeightAt(0, i, 1.1);
+      grid.setWeightAt(i, 0, 1.1);
+      grid.setWeightAt(pathObject.height - 1, 0, 1.1);
+      grid.setWeightAt(0, pathObject.height - 1, 1.1);
     }
-  } else if (path && path.length && nextPath) {
-    move = true;
+
+    console.log(JSON.stringify(grid));
+
+    if (blocked && blocked.length) {
+      blocked.forEach(space => {
+        grid.setWalkableAt(space.x, space.y, false);
+      });
+    }
+
+    grid.setWalkableAt(pathObject.start.x, pathObject.start.y, true);
+    grid.setWalkableAt(pathObject.target.x, pathObject.target.y, true);
+
+    const path = finder.findPath(
+      pathObject.start.x,
+      pathObject.start.y,
+      pathObject.target.x,
+      pathObject.target.y,
+      grid
+    );
+    let move = false;
+
+    if (path && path.length > 1 && !nextPath) {
+      for (let i = 0; i < pathObject.allDirections.length; i++) {
+        if (
+          path[1][0] === pathObject.allDirections[i].x &&
+          path[1][1] === pathObject.allDirections[i].y
+        ) {
+          pathObject.fullPath = path;
+          move = pathObject.allDirections[i];
+        }
+      }
+    } else if (path && path.length && nextPath) {
+      move = true;
+    }
+
+    return move;
+  } catch (e) {
+    console.log(e);
   }
-
-  return move;
 }
-
 function randomMove(pathObject) {
   // console.log('randomMove');
   let moves = pathObject.possibleDirections;
 
   if (moves.length) {
     const random = Math.round(Math.random() * (moves.length - 1));
-    return moves[random].move
+    return moves[random].move;
   } else {
     // console.log('Dead end!')
   }
@@ -262,16 +312,16 @@ function removeDirection(possibleDirections, direction) {
 function snakeArray(snakes) {
   // console.log('snakeArray');
   const allSnakes = [];
-  snakes.forEach((snake) => {
+  snakes.forEach(snake => {
     allSnakes.push(snake);
   });
 
   return allSnakes;
-};
+}
 
 function testPaths(pathObject, pathArr) {
   const path = followPath(pathObject, false, pathArr);
-  
+
   // if (path) {
   //   pathArr.push(path);
   //   pathObject.target = { x: path.x, y: path.y };
@@ -297,10 +347,10 @@ function updateGrid(height, width, ourSnake, enemySnakes) {
   }
 
   for (let i = 1; i < ourSnake.body.length - 1; i++) {
-    gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1
+    gridRows[ourSnake.body[i].y][ourSnake.body[i].x] = 1;
   }
 
-  enemySnakes.forEach((snake) => {
+  enemySnakes.forEach(snake => {
     if (snake.id !== ourSnake.id) {
       for (let i = 1; i < snake.body.length - 1; i++) {
         gridRows[snake.body[i].y][snake.body[i].x] = 1;
@@ -334,4 +384,4 @@ module.exports = {
   snakeArray,
   testPaths,
   updateGrid
-}
+};
