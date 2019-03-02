@@ -228,6 +228,101 @@ function createGrid(height, width, ourSnake, enemySnakes) {
   return grid;
 }
 
+function findSafestFood(height, width, ourSnake, enemies, allFood) {
+  if (allFood.length) {
+    try {
+      let targetFood = {};
+      let difficulty = 10000;
+
+      allFood.forEach(nibble => {
+        let { target, relativeDifficulty } = findPathToFood(
+          height,
+          width,
+          ourSnake,
+          enemies,
+          nibble
+        );
+        if (relativeDifficulty < difficulty) {
+          difficulty = relativeDifficulty;
+          targetFood = target;
+        }
+      });
+
+      if (allFood.length > 0 && targetFood) {
+        return targetFood;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+function findPathToFood(height, width, ourSnake, enemies, nibble) {
+  let result = { target: {}, relativeDifficulty: 0 };
+  let grid = setWeights(height, width, ourSnake, enemies);
+  let clone = grid.clone();
+  let finder = new Pathfinder.AStarFinder();
+  let path = finder.findPath(
+    ourSnake.body[0].x,
+    ourSnake.body[0].y,
+    nibble.x,
+    nibble.y,
+    grid
+  );
+
+  let sum;
+  if (path.length) {
+    path.forEach(coordinate => {
+      sum += clone.getWeightAt(coordinate.x, coordinate.y);
+      console.log(sum);
+    });
+    result.target = path[path.length - 1];
+    result.relativeDifficulty = sum;
+
+    return result;
+  } else {
+    result.target = false;
+    result.relativeDifficulty = 1000;
+    return result;
+  }
+}
+
+function setWeights(height, width, ourSnake, enemies) {
+  let matrix = createGrid(height, width, ourSnake, enemies);
+  let grid = new Pathfinder.Grid(matrix);
+  for (let i = 0; i < height; i++) {
+    grid.setWeightAt(0, i, 8);
+    grid.setWeightAt(i, 0, 8);
+    grid.setWeightAt(height - 1, 0, 2);
+    grid.setWeightAt(0, height - 1, 2);
+  }
+
+  enemies.forEach(enemy => {
+    enemy.forEach(segment => {
+      grid.setWeightAt(segment.x - 1, segment.y, 3);
+      grid.setWeightAt(segment.x, segment.y - 1, 3);
+      grid.setWeightAt(segment.x + 1, segment.y, 3);
+      grid.setWeightAt(segment.x, segment.y + 1, 3);
+    });
+  });
+
+  grid.nodes.forEach((row, y) => {
+    row.forEach((node, x) => {
+      if (node === 2) {
+        grid.setWeightAt(x, y, 4);
+        console.log(grid.nodes[y][x]);
+      }
+    });
+  });
+
+  return grid;
+}
+
 function enemyArray(snakes, ourSnake) {
   // console.log('enemyArray')
   const enemies = [];
@@ -482,6 +577,7 @@ module.exports = {
   findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
+  findSafestFood,
   findShortSnakes,
   followPath,
   getDistance,

@@ -11,6 +11,7 @@ const {
   findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
+  findSafestFood,
   findShortSnakes,
   followPath,
   getDistance,
@@ -87,9 +88,9 @@ app.post('/move', (req, res) => {
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   let possibleDirections = [left, right, up, down];
   avoidObstacles(height, width, allSnakes, possibleDirections);
-
-  const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
+  const nearestFood = findNearestFood(ourHead, food);
+  const safestFood = findSafestFood(height, width, ourSnake, enemies, food);
   let grid = createGrid(height, width, ourSnake, enemies);
   const pathObject = {
     allDirections: [left, right, up, down],
