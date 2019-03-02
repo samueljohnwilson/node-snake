@@ -29,6 +29,13 @@ const {
 } = require('./behaviours.js');
 
 const {
+  enemiesLeft,
+  longerThanAllSnakes,
+  longerThanOneSnake,
+  hasHealthBelow
+} = require('./conditions.js')
+
+const {
   fallbackHandler,
   notFoundHandler,
   genericErrorHandler,
@@ -177,38 +184,34 @@ app.post('/move', (req, res) => {
   console.log(`floodMove: ${floodMove}`)
 
   try {
-    if (nearestFood && pathToFood && ourSnake.health < 90 || nearestFood && pathToFood && !weAreLongest) {
+    if (nearestFood && pathToFood) {
       console.log('pathToFood');
       nextMove = pathToFood; 
-    } 
-    else if (pathToOwnTail) {
-      console.log('pathToOwnTail');
-      nextMove = pathToOwnTail;
+    } else {
+      if (enemiesLeft === 1 && goForHead) {
+        console.log('goForHead');
+        nextMove = goForHead;
+      } else if (pathToOwnTail) {
+        console.log('pathToOwnTail');
+        nextMove = pathToOwnTail;
+      } else if (dangerousPathToOwnTail) {
+        console.log('dangerTail');
+        nextMove = dangerousPathToOwnTail;
+      } else if (pathToEnemyTail) {
+        console.log('pathToEnemyTail');
+        nextMove = pathToEnemyTail;
+      } else if (floodPath) {
+        console.log('floodMove');
+        nextMove = floodMove;
+      } else {
+        console.log('randomMove')
+        nextMove = randomMove(pathObject);
+      }
     }
-    else if (goForHead) {
-      console.log('goForHead');
-      nextMove = goForHead;
-    } 
-    else if (pathToEnemyTail) {
-      console.log('pathToEnemyTail');
-      nextMove = pathToEnemyTail;
-    } 
-    else if (dangerousPathToOwnTail) {
-      console.log('dangerTail');
-      nextMove = dangerousPathToOwnTail;
-    } 
-    else if (floodPath) {
-      console.log('floodMove');
-      nextMove = floodMove;
-    } 
-    else {
-      console.log('randomMove')
-      nextMove = randomMove(pathObject);
-    }
-} catch(err) {
-  console.error(err)
-  nextMove = randomMove(pathObject);
-}
+  } catch(err) {
+    console.error(err)
+    nextMove = randomMove(pathObject);
+  }
 
   if (!nextMove) {
     nextMove = 'right';

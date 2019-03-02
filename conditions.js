@@ -1,9 +1,5 @@
-function oneEnemyLeft(allSnakes) {
-  if (allSnakes.length === 2) {
-    return true;
-  }
-
-  return false;
+function enemiesLeft(allSnakes) {
+  return allSnakes.length;
 }
 
 function longerThanAllSnakes(ourSnake, enemies) {
@@ -35,7 +31,7 @@ function hasHealthBelow(snake, health) {
 }
 
 module.exports = {
-  oneEnemyLeft,
+  enemiesLeft,
   longerThanAllSnakes,
   longerThanOneSnake,
   hasHealthBelow
