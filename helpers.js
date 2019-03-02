@@ -237,7 +237,6 @@ function followPath(pathObject, nextPath = false, blocked = []) {
       row.forEach((node, x) => {
         if (node === 2) {
           grid.setWeightAt(x, y, 16);
-          console.log(grid.nodes[y][x]);
         }
       });
     });
@@ -248,8 +247,6 @@ function followPath(pathObject, nextPath = false, blocked = []) {
       grid.setWeightAt(pathObject.height - 1, 0, 8);
       grid.setWeightAt(0, pathObject.height - 1, 8);
     }
-
-    console.log(JSON.stringify(grid));
 
     if (blocked && blocked.length) {
       blocked.forEach(space => {
