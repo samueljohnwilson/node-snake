@@ -13,6 +13,7 @@ const {
   findNearestFood,
   findShortSnakes,
   followPath,
+  getDistance,
   randomMove,
   snakeArray,
   testPaths,
@@ -102,7 +103,8 @@ app.post('/move', (req, res) => {
     width: width
   }
 
-  const justAte = eatenFood && eatenFood.x === ourHead.x && eatenFood.y === ourHead.y;
+  const ourDistanceFromHeadToTail = getDistance(ourHead, ourTail)
+  const justAte = ourSnake.body[ourSnake.body.length - 2] === ourTail && ourDistanceFromHeadToTail <= 1;
   let pathToOwnTail = false;
   let dangerousPathToOwnTail = false;
   let weAreLongest = true;

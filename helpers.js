@@ -226,6 +226,10 @@ function followPath(pathObject, nextPath = false, blocked = []) {
   return move;
 }
 
+function getDistance(point1, point2) {
+  return Math.abs(point1.x - point2.x) + Math.abs(point1.y - point2.y);
+}
+
 function randomMove(pathObject) {
   // console.log('randomMove');
   let moves = pathObject.possibleDirections;
@@ -318,6 +322,7 @@ module.exports = {
   findNearestFood,
   findShortSnakes,
   followPath,
+  getDistance,
   randomMove,
   snakeArray,
   testPaths,
