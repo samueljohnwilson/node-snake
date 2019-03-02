@@ -204,11 +204,18 @@ function followPath(pathObject, nextPath = false, blocked = []) {
     row.forEach((node, x) => {
       if (node === 2) {
         
-        grid.setWeightAt(x, y, 100)
+        grid.setWeightAt(x, y, 8)
         console.log(grid.nodes[y][x])
       }
     });
   });
+
+  for (let i = 0; i < pathObject.height; i++) {
+    grid.setWeightAt(0, i, 8);
+    grid.setWeightAt(i, 0, 8);
+    grid.setWeightAt(pathObject.height - 1, 0, 2);
+    grid.setWeightAt(0, pathObject.height - 1, 2);
+  }
 
   // console.log(JSON.stringify(grid))
 
