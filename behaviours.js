@@ -6,7 +6,7 @@ const {
   createGrid,
   enemyArray,
   findEnemyTails,
-  findKillableSnakes,
+  findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
   findShortSnakes,
@@ -95,7 +95,7 @@ function floodFill(grid, current, queue, pathObject) {
 }
 
 function followOwnTail(pathObject, target) {
-  console.log('followOwnTail')
+  // console.log('followOwnTail')
   try {
     if (pathObject.turn < 3 || checkForDanger(pathObject, target)) {
       return false;
@@ -137,20 +137,22 @@ function followEnemyTail(pathObject, enemies) {
 
 function kill(pathObject, ourLength, enemies) {
   let closestKillableSnake = false;
-  let targetSnake = false;
+  let direction = false;
   const shortSnakes = findShortSnakes(pathObject, enemies);
-  closestKillableSnake = findKillableSnakes(pathObject, shortSnakes);
+  closestKillableSnake = findKillableSnake(pathObject, shortSnakes);
 
   if (closestKillableSnake) {
-    pathObject.enemySnakes.forEach((snake) => {
-      if (closestKillableSnake.id === snake.id) {
-        targetSnake = snake;
+    for (let i = 0; i < enemies.length; i++) {
+      if (closestKillableSnake.id === enemies[i].id) {
         pathObject.start = pathObject.ourHead;
-        pathObject.target = targetSnake.body[0];
-        const direction = followPath(pathObject);
-        return direction.move;
+        pathObject.target = enemies[i].body[0];
+        direction = followPath(pathObject);
       }
-    });
+    }
+  }
+
+  if (direction) {
+    return direction.move;
   } else {
     return false;
   }

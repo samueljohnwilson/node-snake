@@ -225,8 +225,9 @@ function findEnemyTails(snakes) {
   return tails;
 }
 
-function findKillableSnakes(pathObject, shortSnakes) {
-  // console.log('findKillableSnakes')
+function findKillableSnake(pathObject, shortSnakes) {
+  // console.log('findKillableSnake')
+  let closestKillableSnake = false;
   if (shortSnakes.length) {
     let closestKillableDistance = 0;
 
@@ -240,12 +241,12 @@ function findKillableSnakes(pathObject, shortSnakes) {
     });
 
     if (closestKillableSnake) {
-      // console.log(`The closest killable snake is ${closestKillableSnake.name}`)
+      console.log(`The closest killable snake is ${closestKillableSnake.name}`)
       return closestKillableSnake;
+    } else {
+      return false;
     }
   }
-
-  return false;
 }
 
 function findLowerHealthSnakes(ourSnake, snakes) {
@@ -283,11 +284,11 @@ function findNearestFood(ourHead, food) {
   }
 }
 
-function findShortSnakes(pathObject, snakes) {
+function findShortSnakes(pathObject, enemies) {
   // console.log('findShortestSnake');
   const shortSnakes = [];
 
-  snakes.forEach((snake) => {
+  enemies.forEach((snake) => {
     if (pathObject.ourSnake.body.length > snake.body.length) {
       shortSnakes.push(snake);
     }
@@ -305,7 +306,6 @@ function followPath(pathObject, nextPath = false, blocked = []) {
       if (node === 2) {
         
         grid.setWeightAt(x, y, 100)
-        console.log(grid.nodes[y][x])
       }
     });
   });
@@ -430,7 +430,7 @@ module.exports = {
   createGrid,
   enemyArray,
   findEnemyTails,
-  findKillableSnakes,
+  findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
   findShortSnakes,

@@ -8,7 +8,7 @@ const {
   createGrid,
   enemyArray,
   findEnemyTails,
-  findKillableSnakes,
+  findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
   findShortSnakes,
@@ -129,7 +129,7 @@ app.post('/move', (req, res) => {
     pathObject.escapes.push(enemyTail);
   });
 
-  // const goForHead = kill(pathObject, ourLength, enemies);
+  const goForHead = kill(pathObject, ourLength, enemies);
   const pathToFood = eat(pathObject, nearestFood);
 
   if (req.body.turn > 3 && !justAte) {
@@ -157,9 +157,6 @@ app.post('/move', (req, res) => {
     }
   });
 
-  console.log(possibleDirections)
-  console.log(floods)
-
   let floodMove = false;
 
   possibleDirections.forEach((direction) => {
@@ -173,7 +170,7 @@ app.post('/move', (req, res) => {
   // Behaviour tree goes below here
 
   console.log(`pathToFood: ${pathToFood}`)
-  // console.log(`goForHead: ${goForHead}`)
+  console.log(`goForHead: ${goForHead}`)
   console.log(`pathToOwnTail: ${pathToOwnTail}`)
   console.log(`pathToEnemyTail: ${pathToEnemyTail}`)
   console.log(`dangerousPathToTail: ${dangerousPathToOwnTail}`)
@@ -181,29 +178,33 @@ app.post('/move', (req, res) => {
 
   try {
     if (nearestFood && pathToFood && ourSnake.health < 90 || nearestFood && pathToFood && !weAreLongest) {
-    console.log('pathToFood');
-    nextMove = pathToFood; 
-  } 
-  // else if (goForHead) {
-  //   console.log('goForHead');
-  //   nextMove = goForHead;
-  // } 
-  else if (pathToOwnTail) {
-    console.log('pathToOwnTail');
-    nextMove = pathToOwnTail;
-  } else if (pathToEnemyTail) {
-    console.log('pathToEnemyTail');
-    nextMove = pathToEnemyTail;
-  } else if (dangerousPathToOwnTail) {
-    console.log('dangerTail');
-    nextMove = dangerousPathToOwnTail;
-  } else if (floodPath) {
-    console.log('floodMove');
-    nextMove = floodMove;
-  } else {
-    console.log('randomMove')
-    nextMove = randomMove(pathObject);
-  }
+      console.log('pathToFood');
+      nextMove = pathToFood; 
+    } 
+    else if (pathToOwnTail) {
+      console.log('pathToOwnTail');
+      nextMove = pathToOwnTail;
+    }
+    else if (goForHead) {
+      console.log('goForHead');
+      nextMove = goForHead;
+    } 
+    else if (pathToEnemyTail) {
+      console.log('pathToEnemyTail');
+      nextMove = pathToEnemyTail;
+    } 
+    else if (dangerousPathToOwnTail) {
+      console.log('dangerTail');
+      nextMove = dangerousPathToOwnTail;
+    } 
+    else if (floodPath) {
+      console.log('floodMove');
+      nextMove = floodMove;
+    } 
+    else {
+      console.log('randomMove')
+      nextMove = randomMove(pathObject);
+    }
 } catch(err) {
   console.error(err)
   nextMove = randomMove(pathObject);
@@ -217,7 +218,7 @@ app.post('/move', (req, res) => {
     move: nextMove
   }
 
-  // console.log('Sending to server: ' + JSON.stringify(data));
+  console.log('Sending to server: ' + JSON.stringify(data));
 
   return res.json(data);
 });
