@@ -29,6 +29,106 @@ function avoidObstacles(height, width, allSnakes, possibleDirections) {
   avoidWalls(height, width, possibleDirections);
 }
 
+function calculateArea(pathObject) {
+  const head = pathObject.ourSnake.body[0];
+  const grid = pathObject.grid;
+  let xAxis = 0;
+  let yAxis = 0;
+  let coord;
+
+  pathObject.possibleDirections.forEach((direction) => {
+    if (direction.move === 'left') {
+      let left = 0;
+      for (let i = head.x; i > 0; i--) {
+        if (grid[head.y][i] === 0) {
+          left++;
+        }
+
+        if (grid[head.y][i] === 1) {
+          break;
+        }
+      }
+
+      if (left > xAxis) {
+        xAxis = left;
+        xDirection = -1;
+        // coord = { x: (head.x - left), y: head.y };
+      }
+    }
+
+    if (direction.move === 'right') {
+      let right = 0;
+      for (let i = head.x; i < pathObject.width; i++) {
+        if (grid[head.y][i] === 0) {
+          right++;
+        }
+
+        if (grid[head.y][i] === 1) {
+          break;
+        }
+      }
+
+      if (right > xAxis) {
+        xAxis = right;
+        xDirection = 1;
+        // coord = { x: (head.x + right - 1), y: head.y };
+      }
+    }
+
+    if (direction.move === 'up') {
+      let up = 0;
+      for (let i = head.y; i > 0; i--) {
+        if (grid[i][head.x] === 0) {
+          up++;
+        }
+
+        if (grid[i][head.x] === 1) {
+          break;
+        }
+      }
+
+      if (up > yAxis) {
+        yAxis = up;
+        yDirection = 1;
+        // coord = { x: head.x, y: (head.y - up)};
+      }
+    }
+
+    if (direction.move === 'down') {
+      let down = 0;
+      for (let i = head.y; i < pathObject.height; i++) {
+        if (grid[i][head.x] === 0) {
+          down++;
+        }
+
+        if (grid[i][head.x] === 1) {
+          break;
+        }
+      }
+
+      if (down > yAxis) {
+        yAxis = down;
+        yDirection = -1;
+        // coord = { x: head.x, y: (head.y + down - 1)};
+      }
+    }
+  });
+
+  if (xAxis === 0) {
+    xAxis = 1;
+  }
+
+  if (yAxis === 0) {
+    yAxis === 1;
+  }
+
+  let area = xAxis * yAxis;
+}
+
+// function calculateSnakeArea(pathObject) {
+//   pathObject
+// }
+
 function checkForDanger(pathObject, targetFood, distance = 1) {
   let enemies = pathObject.enemySnakes;
   let danger = false;
@@ -313,6 +413,7 @@ module.exports = {
   avoidSnakeBody,
   avoidObstacles,
   avoidWalls,
+  calculateArea,
   checkForDanger,
   createGrid,
   enemyArray,

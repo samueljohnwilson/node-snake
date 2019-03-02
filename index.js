@@ -22,7 +22,6 @@ const {
 
 const {
   eat,
-  fillSpace,
   followEnemyTail,
   followOwnTail,
   floodFill,
@@ -130,6 +129,7 @@ app.post('/move', (req, res) => {
     pathObject.escapes.push(enemyTail);
   });
 
+  // const goForHead = kill(pathObject, ourLength, enemies);
   const pathToFood = eat(pathObject, nearestFood);
 
   if (req.body.turn > 3 && !justAte) {
@@ -140,52 +140,68 @@ app.post('/move', (req, res) => {
   lastTailPosition = ourTail;
   eatenFood = nearestFood;
 
-  let floodPath = false;
-  const queue = [];
-  floodFill(grid, ourHead, queue, pathObject);
+  let floodPath = [];
+  const leftFlood = [];
+  const rightFlood = [];
+  const upFlood = [];
+  const downFlood = [];
+  const floods = [leftFlood, rightFlood, upFlood, downFlood];
+  floodFill(grid, ourHead, leftFlood, pathObject);
+  floodFill(grid, ourHead, rightFlood, pathObject);
+  floodFill(grid, ourHead, upFlood, pathObject);
+  floodFill(grid, ourHead, downFlood, pathObject);
 
-  possibleDirections.forEach((direction) => {
-    if (queue.length > 1 && queue[1].x === direction.x && queue[1].y === direction.y) {
-      floodPath = direction.move;
+  floods.forEach((flood) => {
+    if (flood.length > floodPath.length) {
+      floodPath = flood;
     }
   });
 
-  // console.log(queue);
+  console.log(possibleDirections)
+  console.log(floods)
+
+  let floodMove = false;
+
+  possibleDirections.forEach((direction) => {
+    if (floodPath.length > 1 && floodPath[1].x === direction.x && floodPath[1].y === direction.y) {
+      floodMove = direction.move;
+    }
+  });
 
   let nextMove = false;
 
   // Behaviour tree goes below here
 
-  console.log(`pathToOwnFood: ${pathToFood}`)
+  console.log(`pathToFood: ${pathToFood}`)
+  // console.log(`goForHead: ${goForHead}`)
   console.log(`pathToOwnTail: ${pathToOwnTail}`)
   console.log(`pathToEnemyTail: ${pathToEnemyTail}`)
   console.log(`dangerousPathToTail: ${dangerousPathToOwnTail}`)
-  console.log(`floodPath: ${floodPath}`)
+  console.log(`floodMove: ${floodMove}`)
 
   try {
     if (nearestFood && pathToFood && ourSnake.health < 90 || nearestFood && pathToFood && !weAreLongest) {
     console.log('pathToFood');
-    
-    nextMove = pathToFood;
-  } else if (pathToOwnTail) {
+    nextMove = pathToFood; 
+  } 
+  // else if (goForHead) {
+  //   console.log('goForHead');
+  //   nextMove = goForHead;
+  // } 
+  else if (pathToOwnTail) {
     console.log('pathToOwnTail');
-    
     nextMove = pathToOwnTail;
   } else if (pathToEnemyTail) {
     console.log('pathToEnemyTail');
-    
     nextMove = pathToEnemyTail;
   } else if (dangerousPathToOwnTail) {
     console.log('dangerTail');
-    
     nextMove = dangerousPathToOwnTail;
   } else if (floodPath) {
-    console.log('floodPath');
-    
-    nextMove = floodPath;
+    console.log('floodMove');
+    nextMove = floodMove;
   } else {
     console.log('randomMove')
-    console.log(floodPath)
     nextMove = randomMove(pathObject);
   }
 } catch(err) {
