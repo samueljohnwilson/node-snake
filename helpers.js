@@ -248,7 +248,7 @@ function findSafestFood(height, width, ourSnake, enemies, allFood) {
         }
       });
 
-      if (allFood.length > 0 && targetFood) {
+      if (allFood.length > 0) {
 
         return targetFood;
 
