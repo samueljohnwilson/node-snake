@@ -11,6 +11,7 @@ const {
   findKillableSnake,
   findLowerHealthSnakes,
   findNearestFood,
+  findSafestFood,
   findShortSnakes,
   followPath,
   getDistance,
@@ -87,9 +88,11 @@ app.post('/move', (req, res) => {
   const down = { x: ourHead.x, y: ourHead.y + 1, move: 'down' };
   let possibleDirections = [left, right, up, down];
   avoidObstacles(height, width, allSnakes, possibleDirections);
-
-  const nearestFood = findNearestFood(ourHead, food);
   const enemies = enemyArray(allSnakes, ourSnake);
+  const nearestFood = findNearestFood(ourHead, food);
+  console.log("Nearest food is at: " + JSON.stringify(nearestFood));
+  const safestFood = findSafestFood(height, width, ourSnake, enemies, food);
+  console.log("Safest food is at: " + JSON.stringify(safestFood));
   let grid = createGrid(height, width, ourSnake, enemies);
   const pathObject = {
     allDirections: [left, right, up, down],
@@ -129,7 +132,7 @@ app.post('/move', (req, res) => {
   });
 
   const goForHead = kill(pathObject, ourLength, enemies);
-  const pathToFood = eat(pathObject, nearestFood);
+  const pathToFood = safestFood ? eat(pathObject, safestFood) : eat(pathObject, nearestFood);
 
   if (req.body.turn > 3 && !justAte) {
     pathObject.target = ourTail;
