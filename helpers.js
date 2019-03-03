@@ -231,7 +231,7 @@ function createGrid(height, width, ourSnake, enemySnakes) {
 function findSafestFood(height, width, ourSnake, enemies, allFood) {
   if (allFood.length) {
     try {
-      let targetFood = {};
+      let targetFood = false;
       let difficulty = 10000;
 
       allFood.forEach(nibble => {
@@ -241,7 +241,7 @@ function findSafestFood(height, width, ourSnake, enemies, allFood) {
           ourSnake,
           enemies,
           nibble
-        );
+        )
         if (relativeDifficulty < difficulty) {
           difficulty = relativeDifficulty;
           targetFood = target;
@@ -249,8 +249,11 @@ function findSafestFood(height, width, ourSnake, enemies, allFood) {
       });
 
       if (allFood.length > 0 && targetFood) {
+
         return targetFood;
+
       } else {
+
         return false;
       }
     } catch (error) {
@@ -275,19 +278,22 @@ function findPathToFood(height, width, ourSnake, enemies, nibble) {
     grid
   );
 
-  let sum;
+  let sum = 0;
   if (path.length) {
     path.forEach(coordinate => {
-      sum += clone.getWeightAt(coordinate.x, coordinate.y);
-      console.log(sum);
+      sum += clone.getWeightAt(coordinate[0], coordinate[1]);
+      // console.log("SUM!!!" + sum);
     });
-    result.target = path[path.length - 1];
+    result.target = {x: path[path.length - 1][0], y: path[path.length-1][1]};
     result.relativeDifficulty = sum;
 
+    // console.log("target is: " + JSON.stringify(result));
     return result;
+
   } else {
     result.target = false;
     result.relativeDifficulty = 1000;
+    // console.log("target is: " + JSON.stringify(result));
     return result;
   }
 }
@@ -315,7 +321,7 @@ function setWeights(height, width, ourSnake, enemies) {
     row.forEach((node, x) => {
       if (node === 2) {
         grid.setWeightAt(x, y, 4);
-        console.log(grid.nodes[y][x]);
+        // console.log(grid.nodes[y][x]);
       }
     });
   });
