@@ -343,8 +343,8 @@ function followPath(pathObject, nextPath = false, blocked = []) {
     for (let i = 0; i < pathObject.height; i++) {
       grid.setWeightAt(0, i, 8);
       grid.setWeightAt(i, 0, 8);
-      grid.setWeightAt(pathObject.height - 1, 0, 8);
-      grid.setWeightAt(0, pathObject.height - 1, 8);
+      grid.setWeightAt(pathObject.height[i] - 1, 0, 4);
+      grid.setWeightAt(0, pathObject.height[i] - 1, 4);
     }
 
     if (blocked && blocked.length) {
