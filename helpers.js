@@ -309,7 +309,7 @@ function setWeights(height, width, ourSnake, enemies) {
   }
 
   enemies.forEach(enemy => {
-    enemy.forEach(segment => {
+    enemy.body.forEach(segment => {
       grid.setWeightAt(segment.x - 1, segment.y, 3);
       grid.setWeightAt(segment.x, segment.y - 1, 3);
       grid.setWeightAt(segment.x + 1, segment.y, 3);
