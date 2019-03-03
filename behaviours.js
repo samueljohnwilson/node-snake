@@ -11,6 +11,7 @@ const {
   findNearestFood,
   findShortSnakes,
   followPath,
+  getDistance,
   randomMove,
   snakeArray,
   testPaths,
@@ -97,7 +98,7 @@ function floodFill(grid, current, queue, pathObject) {
 function followOwnTail(pathObject, target) {
   // console.log('followOwnTail')
   try {
-    if (pathObject.turn < 3 || checkForDanger(pathObject, target)) {
+    if (pathObject.turn < 3) {
       return false;
     }
   
@@ -121,12 +122,17 @@ function followEnemyTail(pathObject, enemies) {
   const enemyTails = findEnemyTails(enemies);
   let move = false;
 
+  // console.log(enemyTails)
+
   if (enemyTails.length) {
     for (let i = 0; i < enemyTails.length; i++) {
-      pathObject.target = enemyTails[i];
+      pathObject.target = { x: enemyTails[i].x, y: enemyTails[i].y };
+      pathObject.start = pathObject.ourHead;
+      const distanceFromHeadToTail = getDistance(pathObject.ourHead, enemyTails[i].snake.body[enemyTails[i].snake.body.length - 1]);
+      const justAte = enemyTails[i].snake.body[enemyTails[i].snake.body.length - 1] === enemyTails[i].snake.body[enemyTails[i].snake.body.length - 2] && distanceFromHeadToTail <= 1;
       const direction = followPath(pathObject);
 
-      if (direction) {
+      if (direction && !justAte) {
         move = direction.move;
       }
     }
@@ -141,7 +147,7 @@ function kill(pathObject, ourLength, enemies) {
   const shortSnakes = findShortSnakes(pathObject, enemies);
   closestKillableSnake = findKillableSnake(pathObject, shortSnakes);
 
-  if (closestKillableSnake) {
+  if (closestKillableSnake && !(pathObject.ourHead.x === 0 || pathObject.ourHead.x === pathObject.width - 1 || pathObject.ourHead.y === 0 || pathObject.ourHead.y === pathObject.height - 1)) {
     for (let i = 0; i < enemies.length; i++) {
       if (closestKillableSnake.id === enemies[i].id) {
         pathObject.start = pathObject.ourHead;

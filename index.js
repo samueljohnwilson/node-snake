@@ -113,14 +113,6 @@ app.post('/move', (req, res) => {
   const justAte = ourSnake.body[ourSnake.body.length - 2] === ourTail && ourDistanceFromHeadToTail <= 1;
   let pathToOwnTail = false;
   let dangerousPathToOwnTail = false;
-  let weAreLongest = true;
-
-  enemies.forEach((snake) => {
-    const enemyLength = snake.body.length;
-    if (ourLength <= enemyLength) {
-      weAreLongest = false;
-    }
-  });
 
   if (req.body.turn < 3 || !lastTailPosition || justAte) {
     pathToOwnTail = false;

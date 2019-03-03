@@ -133,10 +133,6 @@ function calculateArea(pathObject) {
   let area = xAxis * yAxis;
 }
 
-// function calculateSnakeArea(pathObject) {
-//   pathObject
-// }
-
 function checkForDanger(pathObject, targetFood, distance = 1) {
   let enemies = pathObject.enemySnakes;
   let danger = false;
@@ -245,6 +241,7 @@ function findEnemyTails(snakes) {
   const tails = [];
   snakes.forEach(snake => {
     const snakeTails = {};
+    snakeTails.snake = snake;
     snakeTails.x = snake.body[snake.body.length - 1].x;
     snakeTails.y = snake.body[snake.body.length - 1].y;
     tails.push(snakeTails);
@@ -337,6 +334,7 @@ function followPath(pathObject, nextPath = false, blocked = []) {
     pathObject.grid.forEach((row, y) => {
       row.forEach((node, x) => {
         if (node === 2) {
+          grid.setWalkableAt(x, y, true);
           grid.setWeightAt(x, y, 16);
         }
       });
