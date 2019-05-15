@@ -2,22 +2,13 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const logger = require('morgan');
 const {
-  avoidSnakeBody,
   avoidObstacles,
-  avoidWalls,
   createGrid,
   enemyArray,
   findEnemyTails,
-  findKillableSnake,
-  findLowerHealthSnakes,
   findNearestFood,
-  findShortSnakes,
-  followPath,
   getDistance,
   randomMove,
-  snakeArray,
-  testPaths,
-  updateGrid
 } = require('./helpers.js');
 
 const {
